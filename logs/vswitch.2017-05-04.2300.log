@@ -1,0 +1,8 @@
+V-SWITCH> 2017/05/04 23:14:19 Config: "MTU" -> "1500"
+V-SWITCH> 2017/05/04 23:14:19 Config: "devicename" -> "switch0"
+V-SWITCH> 2017/05/04 23:14:19 [LOG] LogRotation engine started
+V-SWITCH> 2017/05/04 23:14:19 [TAP] Error creating tap: <operation not permitted>
+V-SWITCH> 2017/05/04 23:14:19 [TAP-EXCEPTION] OH, SHIT.
+V-SWITCH> 2017/05/04 23:14:19 [TAP-EXCEPTION] Error: <runtime error: invalid memory address or nil pointer dereference>
+V-SWITCH> 2017/05/04 23:14:19 Reading config...
+V-SWITCH> 2017/05/04 23:14:19 [OMG] V-Switch starts now!
