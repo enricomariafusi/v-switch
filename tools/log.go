@@ -26,41 +26,42 @@ func init() {
 }
 
 // rotates the log folder
-func (this *vswitchlogfile) RotateLogFolder() {
+func (lf *vswitchlogfile) RotateLogFolder() {
 
 	for {
 
 		time.Sleep(1 * time.Hour)
-		if this.logfile != nil {
-			err := this.logfile.Close()
+		if lf.logfile != nil {
+			err := lf.logfile.Close()
 			log.Println("[LOG] close logfile returned: ", err)
 		}
 
-		this.SetLogFolder()
+		lf.SetLogFolder()
 
 	}
 
 }
 
 // sets the log folder
-func (this *vswitchlogfile) SetLogFolder() {
+func (lf *vswitchlogfile) SetLogFolder() {
 
 	const layout = "2006-01-02.15"
 
 	orario := time.Now()
 
 	var currentFolder = Hpwd()
-	this.filename = filepath.Join(currentFolder, "logs", "vswitch."+orario.Format(layout)+"00.log")
-	log.Println("[LOG] Logfile is: " + this.filename)
+	lf.filename = filepath.Join(currentFolder, "logs", "vswitch."+orario.Format(layout)+"00.log")
+	log.Println("[LOG] Logfile is: " + lf.filename)
 
-	this.logfile, _ = os.Create(this.filename)
+	lf.logfile, _ = os.Create(lf.filename)
 
 	log.SetPrefix("V-SWITCH> ")
-	log.SetOutput(this.logfile)
+	log.SetOutput(lf.logfile)
 
 }
 
-func Log_Engine_Start() {
+//LogEngineStart just triggers the init for the package, and logs it.
+func LogEngineStart() {
 
 	log.Println("[LOG] LogRotation engine started")
 

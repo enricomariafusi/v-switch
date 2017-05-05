@@ -1,10 +1,10 @@
 package tools
 
-// Hpwd: the UNIX pwd
 import (
 	"os"
 )
 
+//Hpwd behaves like the unix pwd command, returning the current path
 func Hpwd() string {
 
 	tmpLoc, err := os.Getwd()

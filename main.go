@@ -10,7 +10,7 @@ import (
 
 func init() {
 
-	to.Log_Engine_Start()
+	to.LogEngineStart()
 	ta.TapEngineStart()
 	co.StartConfig()
 
@@ -18,7 +18,7 @@ func init() {
 
 func main() {
 
-	log.Println("[OMG] V-Switch starts now!")
+	log.Println("[OMG] End of bootstrap, V-Switch 100% operating")
 
 	select {}
 
