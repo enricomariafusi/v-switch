@@ -18,7 +18,7 @@ func init() {
 
 func main() {
 
-	log.Println("[OMG] End of bootstrap, V-Switch 100% operating")
+	log.Println("[OMG] End of bootstrap.")
 
 	select {}
 

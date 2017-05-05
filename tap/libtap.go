@@ -10,16 +10,40 @@ import (
 	"github.com/songgao/water"
 )
 
-var VDev map[string]string
+type vswitchdevice struct {
+	devicename string
+	mtu        int
+	deviceif   water.Config
+	frame      ethernet.Frame
+	realif     *water.Interface
+	err        error
+}
+
+var VDev vswitchdevice
 
 func init() {
 
-	VDev = make(map[string]string)
+	VDev.SetDeviceConf()
+	VDev.tapDeviceInit()
+}
 
-	VDev["MTU"] = conf.VConfig["MTU"]
-	log.Printf("[TAP-INIT] MTU: <%s>", VDev["MTU"])
-	VDev["DEVICENAME"] = conf.VConfig["DEVICENAME"]
-	log.Printf("[TAP-INIT] DEV: <%s>", VDev["DEVICENAME"])
+func (vd *vswitchdevice) SetDeviceConf() {
+
+	if vd.mtu, vd.err = strconv.Atoi(conf.VConfig["MTU"]); vd.err != nil {
+		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
+	} else {
+		vd.frame.Resize(vd.mtu)
+		log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
+	}
+
+	vd.devicename = conf.VConfig["DEVICENAME"]
+	log.Printf("[TAP] Devicename in conf is: %v", vd.devicename)
+
+	vd.deviceif = water.Config{
+		DeviceType: water.TAP,
+	}
+
+	vd.deviceif.Name = vd.devicename
 
 }
 
@@ -28,52 +52,39 @@ func init() {
 //sudo ip addr add 10.1.0.10/24 dev <tapname>
 //sudo ip link set dev <tapname> up
 //ping -c1 -b 10.1.0.255
-func tapDeviceInit(devname string) {
+func (vd *vswitchdevice) tapDeviceInit() {
 
 	defer func() {
 		if e := recover(); e != nil {
-			log.Println("[TAP-EXCEPTION] OH, SHIT.")
+			log.Println("[TAP][EXCEPTION] OH, SHIT.")
 			err, ok := e.(error)
 			if !ok {
 				err = fmt.Errorf("[TAPDRV]: %v", e)
 			}
-			log.Printf("[TAP-EXCEPTION] Error: <%s>", err)
+			log.Printf("[TAP][EXCEPTION] Error: <%s>", err)
 
 		}
 	}()
 
-	config := water.Config{
-		DeviceType: water.TAP,
-	}
-	config.Name = devname
-
-	ifce, err := water.New(config)
-	if err != nil {
-		log.Printf("[TAP] Error creating tap: <%s>", err)
+	vd.realif, vd.err = water.New(vd.deviceif)
+	if vd.err != nil {
+		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
+		log.Println("[TAP][ERROR] Are you ROOT?")
 	} else {
-		log.Printf("[TAP] Success creating tap: <%s>", devname)
-	}
-
-	var frame ethernet.Frame
-
-	if mtu, err := strconv.Atoi(VDev["MTU"]); err != nil {
-		log.Printf("[TAP] Cannot get MTU from conf: <%s>", err)
-	} else {
-		frame.Resize(mtu)
-		log.Printf("[TAP] MTU SET TO: %v", mtu)
+		log.Printf("[TAP] Success creating tap: <%s>", vd.devicename)
 	}
 
 	for {
-
-		n, err := ifce.Read([]byte(frame))
-		if err != nil {
-			log.Printf("[TAP] Error reading tap: <%s>", err)
+		var n int
+		n, vd.err = vd.realif.Read([]byte(vd.frame))
+		if vd.err != nil {
+			log.Printf("[TAP] Error reading tap: <%s>", vd.err)
 		} else {
-			frame = frame[:n]
-			log.Printf("Dst: %s\n", frame.Destination())
-			log.Printf("Src: %s\n", frame.Source())
-			log.Printf("Ethertype: % x\n", frame.Ethertype())
-			log.Printf("Payload: % x\n", frame.Payload())
+			vd.frame = vd.frame[:n]
+			log.Printf("Dst: %s\n", vd.frame.Destination())
+			log.Printf("Src: %s\n", vd.frame.Source())
+			log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
+			log.Printf("Payload: % x\n", vd.frame.Payload())
 		}
 	}
 
@@ -81,6 +92,6 @@ func tapDeviceInit(devname string) {
 
 func TapEngineStart() {
 
-	tapDeviceInit(VDev["DEVICENAME"])
+	log.Println("[TAP] Tap Engine Starting...")
 
 }
