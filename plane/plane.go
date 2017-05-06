@@ -12,7 +12,7 @@ import (
 
 type udpframe struct {
 	uframe ethernet.Frame //frame we received from the network
-	addr   net.UDPAddr    //Address to send/receive
+	addr   string         //Address to send/receive
 }
 
 type vswitchplane struct {
@@ -65,11 +65,28 @@ func init() {
 	log.Printf("[PLANE] QUEUES INITIALIZED")
 	log.Printf("[PLANE] PORTS: %b", len(VSwitch.ports))
 
+	go VSwitch.broadcastFrame()
+
 }
 
 //broadcastFrame takes from ToBroadcast
 //and sends the same frame to  ToUdpSend , foreach port.
 func (sw *vswitchplane) broadcastFrame() {
+
+	log.Printf("[PLANE] Broadcast engine started")
+
+	for {
+
+		myudpframe := <-sw.ToBroadcast
+
+		for _, tmp_addr := range sw.ports {
+			myudpframe.addr = tmp_addr
+			sw.ToUdpSend <- myudpframe
+		}
+
+	}
+
+	log.Printf("[PLANE] Broadcast engine ends")
 
 }
 
