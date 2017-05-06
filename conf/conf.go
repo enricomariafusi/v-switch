@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+//VConfig will export the configuration to any package needing it
 var VConfig map[string]string
 
 func init() {
@@ -21,9 +22,10 @@ func init() {
 
 }
 
+//StartConfig is used in main.init to trigger the init in the package conf
 func StartConfig() {
 
-	log.Printf("Reading config...\r\n")
+	log.Println("[CONF] Config Engine Init.")
 
 }
 

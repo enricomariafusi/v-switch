@@ -2,7 +2,9 @@ package main
 
 import (
 	co "V-switch/conf"
-	ta "V-switch/tap"
+	aes "V-switch/crypt"
+	pl "V-switch/plane"
+	tap "V-switch/tap"
 	to "V-switch/tools"
 	"log"
 	"os"
@@ -11,8 +13,10 @@ import (
 func init() {
 
 	to.LogEngineStart()
-	ta.TapEngineStart()
 	co.StartConfig()
+	tap.EngineStart()
+	pl.PlaneInit()
+	aes.EngineStart()
 
 }
 

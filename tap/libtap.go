@@ -19,6 +19,7 @@ type vswitchdevice struct {
 	err        error
 }
 
+//This will represent the tap device when exported.
 var VDev vswitchdevice
 
 func init() {
@@ -90,7 +91,8 @@ func (vd *vswitchdevice) tapDeviceInit() {
 
 }
 
-func TapEngineStart() {
+//EngineStart triggers the init function in the package tap
+func EngineStart() {
 
 	log.Println("[TAP] Tap Engine Starting...")
 
