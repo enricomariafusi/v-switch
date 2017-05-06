@@ -41,7 +41,7 @@ func serializeConf(line string) {
 	if len(split) != 0 {
 
 		VConfig[split[0]] = split[1]
-		log.Printf("Config: %q -> %q\r\n", split[0], split[1])
+		log.Printf("[CONF]: %q -> %q\r\n", split[0], split[1])
 
 	}
 
@@ -51,7 +51,7 @@ func readConfig(FileName string) {
 
 	file, err := os.Open(FileName)
 	if err != nil {
-		log.Printf("[Config] can't open file %s", FileName)
+		log.Printf("[CONF] can't open file %s", FileName)
 
 	}
 	defer file.Close()

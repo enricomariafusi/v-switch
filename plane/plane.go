@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/songgao/packets/ethernet"
 )
@@ -51,6 +52,8 @@ func init() {
 	}
 	log.Printf("[PLANE] QUEUE SET TO: %v", VSwitch.queuesize)
 
+	VSwitch.ports = make(map[string]string)
+
 	VSwitch.ToBroadcast = make(chan udpframe, VSwitch.queuesize)
 	VSwitch.ToUdpSend = make(chan udpframe, VSwitch.queuesize)
 
@@ -60,6 +63,7 @@ func init() {
 	VSwitch.ToTapSend = make(chan ethernet.Frame, VSwitch.queuesize)
 
 	log.Printf("[PLANE] QUEUES INITIALIZED")
+	log.Printf("[PLANE] PORTS: %b", len(VSwitch.ports))
 
 }
 
@@ -85,18 +89,38 @@ func (sw *vswitchplane) udpAlienAnnounce() {
 }
 
 //Returns true if the MAC is known
-func (sw *vswitchplane) macIsKnown(net.HardwareAddr) bool {
-	return true
+func (sw *vswitchplane) macIsKnown(mac net.HardwareAddr) bool {
+
+	_, exists := sw.ports[mac.String()]
+
+	return exists
 }
 
 //Adds a new port into the plane
-func (sw *vswitchplane) addPort(net.HardwareAddr, net.UDPAddr) {
+func (sw *vswitchplane) addPort(mac string, ind string) {
+
+	hwaddr := strings.ToLower(mac)
+	udpadr := strings.ToLower(ind)
+	_, err := net.ResolveUDPAddr("udp", ind)
+	if err != nil {
+		log.Printf("[PLANE][PORT][ERROR] %s is not a valid UDP address", ind)
+		return
+	}
+
+	_, err = net.ParseMAC(mac)
+	if err != nil {
+		log.Printf("[PLANE][PORT][ERROR] %s is not a valid MAC address", mac)
+		return
+	}
+
+	log.Printf("[PLANE][PORT][NEW] Added New port -> MAC %s to %s ", mac, ind)
+	sw.ports[hwaddr] = udpadr
 
 }
 
 //PlaneInit is just a wrapper for starting the init
 func PlaneInit() {
 
-	log.Println("[PLANE] PLANE Engine Starting...")
+	log.Println("[PLANE] PLANE Engine Start")
 
 }

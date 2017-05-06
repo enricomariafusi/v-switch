@@ -9,5 +9,5 @@ each others on layer 2. Adding a new machine to the switch will advertise each o
 to be able to use it inside a cloud while autoscaling: no provisioning is needed, there is only one key _per virtual switch_.
 
 
-Still work in progress, keep following.
+Still work in progress. I will change this README when finished.
 
