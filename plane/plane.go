@@ -99,8 +99,8 @@ func (sw *vswitchplane) macIsKnown(mac net.HardwareAddr) bool {
 //Adds a new port into the plane
 func (sw *vswitchplane) addPort(mac string, ind string) {
 
-	hwaddr := strings.ToLower(mac)
-	udpadr := strings.ToLower(ind)
+	hwaddr := strings.ToUpper(mac)
+
 	_, err := net.ResolveUDPAddr("udp", ind)
 	if err != nil {
 		log.Printf("[PLANE][PORT][ERROR] %s is not a valid UDP address", ind)
@@ -114,7 +114,7 @@ func (sw *vswitchplane) addPort(mac string, ind string) {
 	}
 
 	log.Printf("[PLANE][PORT][NEW] Added New port -> MAC %s to %s ", mac, ind)
-	sw.ports[hwaddr] = udpadr
+	sw.ports[hwaddr] = ind
 
 }
 

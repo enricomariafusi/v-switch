@@ -82,8 +82,8 @@ func (vd *vswitchdevice) tapDeviceInit() {
 			log.Printf("[TAP] Error reading tap: <%s>", vd.err)
 		} else {
 			vd.frame = vd.frame[:n]
-			log.Printf("Dst: %s\n", vd.frame.Destination())
-			log.Printf("Src: %s\n", vd.frame.Source())
+			log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), IsMacBcast(vd.frame.Destination().String()))
+			log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), IsMacBcast(vd.frame.Source().String()))
 			log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
 			log.Printf("Payload: % x\n", vd.frame.Payload())
 		}

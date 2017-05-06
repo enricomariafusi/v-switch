@@ -32,3 +32,35 @@ func GetLocalIp() string {
 	torn := strings.Split(conn.LocalAddr().String(), ":")
 	return torn[0]
 }
+
+func AddrResolve(fqdn string) (addr string) {
+
+	addresses, err := net.LookupIP(fqdn)
+
+	if err != nil {
+		log.Printf("[DNS] ERROR %s", err)
+		// protocol = "tcp4"
+		return "127.0.0.1"
+
+	} else {
+
+		addr := addresses[0].String()
+
+		log.Printf("[DNS] Resolution ok: %s -> %s", fqdn, addr)
+
+		if strings.Count(addr, ":") > 2 {
+			addr = "[" + addr + "]"
+			// protocol = "tcp6"
+			return addr
+		}
+
+		if strings.Contains(addr, ".") {
+			// protocol = "tcp4"
+			return addr
+		}
+
+	}
+
+	return "127.0.0.1"
+
+}
