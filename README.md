@@ -8,6 +8,8 @@ The aim is to be able to create a LAN across the internet or inside the cloud, w
 each others on layer 2. Adding a new machine to the switch will advertise each other machine seamless, **unlike Tinc**. This is
 to be able to use it inside a cloud while autoscaling: no provisioning is needed, there is only one key _per virtual switch_.
 
+Ideally, when the cloud will autoscale, all the bundles with v-switch installed will "automagically" plug into the virtual switch. (then, to run a dhcp daemon on a port would allow to give the IP address, like it was a real switch). 
+
 
 Still work in progress. I will change this README when finished.
 
