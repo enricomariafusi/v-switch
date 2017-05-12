@@ -1,6 +1,6 @@
 #   v-switch
 
-V-switch is an encrypted virtual switch. Following the concept of Tinc (part of it) it creates a virtual interface
+V-switch is an encrypted virtual switch. Following the concept of Tinc (part of it) and SDN (Sowftare Defined Networks) it creates a virtual interface
 which peers with other daemons around the internet. All the machines running the same daemon, with the same encryption key
 will have a device configured, which behaves like it was cabled to the same physical switch.  
 
