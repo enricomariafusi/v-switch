@@ -11,5 +11,5 @@ to be able to use it inside a cloud while autoscaling: no provisioning is needed
 Ideally, when the cloud will autoscale, all the bundles with v-switch installed will "automagically" plug into the virtual switch. (then, to run a dhcp daemon on a port would allow to give the IP address, like it was a real switch). 
 
 
-Still work in progress. I will change this README when finished.
+Still work in progress. I will change this README when usable.
 
