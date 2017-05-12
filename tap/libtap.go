@@ -32,6 +32,8 @@ func (vd *vswitchdevice) SetDeviceConf() {
 
 	if vd.mtu, vd.err = strconv.Atoi(conf.VConfig["MTU"]); vd.err != nil {
 		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
+		vd.frame.Resize(1500)
+		log.Printf("[TAP] Using the default of 1500. Hope is fine.")
 	} else {
 		vd.frame.Resize(vd.mtu)
 		log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
