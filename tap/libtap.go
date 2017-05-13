@@ -78,6 +78,7 @@ func (vd *vswitchdevice) tapDeviceInit() {
 	for {
 		var n int
 		n, vd.err = vd.realif.Read([]byte(vd.frame))
+
 		if vd.err != nil {
 			log.Printf("[TAP] Error reading tap: <%s>", vd.err)
 		} else {
