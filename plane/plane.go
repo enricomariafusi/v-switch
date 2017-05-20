@@ -46,8 +46,8 @@ var UFrame udpframe
 
 func init() {
 
-	if VSwitch.queuesize, VSwitch.err = strconv.Atoi(conf.VConfig["QUEUE"]); VSwitch.err != nil {
-		log.Printf("[PLANE] Cannot get QUEUE from conf: <%s>", VSwitch.err)
+	if VSwitch.queuesize, VSwitch.err = strconv.Atoi(conf.GetConfigItem("QUEUE")); VSwitch.err != nil {
+		log.Printf("[PLANE] Cannot get QUEUE from conf: <%s>, using default 256", VSwitch.err)
 		VSwitch.queuesize = 256
 	}
 	log.Printf("[PLANE] QUEUE SET TO: %v", VSwitch.queuesize)

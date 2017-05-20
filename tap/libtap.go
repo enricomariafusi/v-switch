@@ -25,12 +25,12 @@ var VDev vswitchdevice
 func init() {
 
 	VDev.SetDeviceConf()
-	VDev.tapDeviceInit()
+	go VDev.tapDeviceInit()
 }
 
 func (vd *vswitchdevice) SetDeviceConf() {
 
-	if vd.mtu, vd.err = strconv.Atoi(conf.VConfig["MTU"]); vd.err != nil {
+	if vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU")); vd.err != nil {
 		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
 		vd.frame.Resize(1500)
 		log.Printf("[TAP] Using the default of 1500. Hope is fine.")
@@ -39,7 +39,7 @@ func (vd *vswitchdevice) SetDeviceConf() {
 		log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
 	}
 
-	vd.devicename = conf.VConfig["DEVICENAME"]
+	vd.devicename = conf.GetConfigItem("DEVICENAME")
 	log.Printf("[TAP] Devicename in conf is: %v", vd.devicename)
 
 	vd.deviceif = water.Config{

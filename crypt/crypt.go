@@ -14,14 +14,14 @@ import (
 func init() {
 
 	originalText := []byte(tools.RandSeq(1500))
-	key := []byte(conf.VConfig["SWITCHID"]) //32 BYTE fpr AES256
+	key := []byte(conf.GetConfigItem("SWITCHID")) //32 BYTE fpr AES256
 
 	if len(key) < 32 {
 		log.Printf("[AES] Key too short (%d) ", len(key))
 		log.Println("[AES] AES256 cannot be shorter than 32 bytes. Generating a random one")
 		log.Println("[AES] PLEASE NOTICE THE SWITCH WILL BE ISOLATED")
 		key = []byte(tools.RandSeq(32)) // 32 because of yes.
-		conf.VConfig["SWITCHID"] = string(key[:])
+		conf.SetConfigItem("SWITCHID", string(key[:]))
 		log.Printf("[AES] Your new safe key is: %s", key)
 	}
 

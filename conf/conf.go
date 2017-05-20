@@ -65,3 +65,27 @@ func readConfig(FileName string) {
 	file.Close()
 
 }
+
+func ConfigItemExists(item string) bool {
+
+	_, exists := VConfig[item]
+
+	return exists
+
+}
+
+func GetConfigItem(item string) string {
+
+	if ConfigItemExists(item) {
+		return VConfig[item]
+	} else {
+		return ""
+	}
+
+}
+
+func SetConfigItem(item string, value string) {
+
+	VConfig[item] = value
+
+}
