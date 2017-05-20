@@ -97,6 +97,6 @@ func (vd *vswitchdevice) tapDeviceInit() {
 //EngineStart triggers the init function in the package tap
 func EngineStart() {
 
-	log.Println("[TAP] Tap Engine Starting...")
+	log.Println("[TAP] Tap Engine Init")
 
 }

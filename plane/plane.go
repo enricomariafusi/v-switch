@@ -20,12 +20,12 @@ type vswitchplane struct {
 	//Mapping from MAC address to UDP address
 	ports map[string]string
 	// from TAP to UDP
-	ToBroadcast chan udpframe //Frames to be broadcasted  (MAC FF:FF:FF:FF:FF:FF)
+	ToBroadcast chan udpframe //Frames to be broadcasted , see tap.IsMacBcast
 	ToUdpSend   chan udpframe //Frames to be sent to UDP
 
 	//UDP to PLANE
-	ToAnnounceOne   chan udpframe //Signaling to announcing themselves  (MAC 01-80-C2-00-00-00 )
-	ToAnnounceAlien chan udpframe //Signaling to announcing someone else (MAC 01-80-C2-00-00-03 )
+	ToAnnounceOne   chan udpframe //Signaling to announce themselves  (MAC 13:13:13:13:13:13 )
+	ToAnnounceAlien chan udpframe //Signaling to announce someone else (MAC 17:17:17:17:17:17 )
 	//IEEE 802.3-2012 section 6 clause 79
 
 	//UDP to TAP
@@ -138,6 +138,6 @@ func (sw *vswitchplane) addPort(mac string, ind string) {
 //PlaneInit is just a wrapper for starting the init
 func PlaneInit() {
 
-	log.Println("[PLANE] PLANE Engine Start")
+	log.Println("[PLANE] PLANE Engine Init")
 
 }

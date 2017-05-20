@@ -63,6 +63,6 @@ func (lf *vswitchlogfile) SetLogFolder() {
 //LogEngineStart just triggers the init for the package, and logs it.
 func LogEngineStart() {
 
-	log.Println("[LOG] LogRotation engine started")
+	log.Println("[LOG] LogRotation Init")
 
 }

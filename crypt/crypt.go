@@ -95,6 +95,6 @@ func FrameDecrypt(key []byte, cryptoText []byte) []byte {
 //EngineStart triggers the init function in the package tap
 func EngineStart() {
 
-	log.Println("[CRYPT] AES Engine Starting...")
+	log.Println("[CRYPT] AES Engine Init")
 
 }

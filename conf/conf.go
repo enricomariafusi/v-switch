@@ -25,7 +25,7 @@ func init() {
 //StartConfig is used in main.init to trigger the init in the package conf
 func StartConfig() {
 
-	log.Println("[CONF] Config Engine Init.")
+	log.Println("[CONF] Config Engine Init")
 
 }
 
