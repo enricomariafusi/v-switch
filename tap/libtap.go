@@ -4,6 +4,7 @@ import (
 	"V-switch/conf"
 	"fmt"
 	"log"
+	"net"
 	"strconv"
 
 	"github.com/songgao/packets/ethernet"
@@ -17,6 +18,7 @@ type vswitchdevice struct {
 	frame      ethernet.Frame
 	realif     *water.Interface
 	err        error
+	mac        string
 }
 
 //This will represent the tap device when exported.
@@ -25,7 +27,7 @@ var VDev vswitchdevice
 func init() {
 
 	VDev.SetDeviceConf()
-	go VDev.tapDeviceInit()
+	go VDev.tapDeviceInit() //this is blocking so it must be a new thread
 }
 
 func (vd *vswitchdevice) SetDeviceConf() {
@@ -74,7 +76,9 @@ func (vd *vswitchdevice) tapDeviceInit() {
 		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
 		log.Println("[TAP][ERROR] Are you ROOT?")
 	} else {
-		log.Printf("[TAP] Success creating tap: <%s>", vd.devicename)
+		tmp_if, _ := net.InterfaceByName(vd.devicename)
+		vd.mac = tmp_if.HardwareAddr.String()
+		log.Printf("[TAP] Success creating tap: <%s> at mac [%s] ", vd.devicename, vd.mac)
 	}
 
 	for {

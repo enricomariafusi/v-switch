@@ -6,46 +6,57 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"io"
 	"log"
 	"reflect"
+	"strconv"
 )
 
 func init() {
 
-	originalText := []byte(tools.RandSeq(1500))
-	key := []byte(conf.GetConfigItem("SWITCHID")) //32 BYTE fpr AES256
+	for i := 0; i < 10; i++ {
 
-	if len(key) < 32 {
-		log.Printf("[AES] Key too short (%d) ", len(key))
-		log.Println("[AES] AES256 cannot be shorter than 32 bytes. Generating a random one")
-		log.Println("[AES] PLEASE NOTICE THE SWITCH WILL BE ISOLATED")
-		key = []byte(tools.RandSeq(32)) // 32 because of yes.
-		conf.SetConfigItem("SWITCHID", string(key[:]))
-		log.Printf("[AES] Your new safe key is: %s", key)
-	}
+		l, _ := strconv.Atoi(conf.GetConfigItem("MTU"))
 
-	encrypted := FrameEncrypt(key, originalText)
-	inverted := FrameDecrypt(key, encrypted)
+		originalText := []byte(tools.RandSeq(l + i - 5))
+		key := []byte(conf.GetConfigItem("SWITCHID")) //32 BYTE fpr AES256
 
-	if reflect.DeepEqual(inverted, originalText) {
-		log.Printf("[CRYPT] AES engine test PASSED")
-	} else {
-		log.Printf("[CRYPT] AES engine test FAILED")
+		if len(key) < 32 {
+			log.Printf("[AES] Key too short (%d) ", len(key))
+			log.Println("[AES] AES256 cannot be shorter than 32 bytes. Generating a random one")
+			log.Println("[AES] PLEASE NOTICE THE SWITCH WILL BE ISOLATED")
+			key = []byte(tools.RandSeq(32)) // 32 because of yes.
+			conf.SetConfigItem("SWITCHID", string(key[:]))
+			log.Printf("[AES] Your new safe key is: %s", key)
+		}
+
+		encrypted := FrameEncrypt(key, originalText)
+		inverted := FrameDecrypt(key, encrypted)
+
+		log.Println("[CRYPT] Originaltext Len: ", len(originalText))
+		log.Println("[CRYPT] EncryptedText Len: ", len(encrypted))
+
+		if reflect.DeepEqual(inverted, originalText) {
+			log.Printf("[CRYPT] AES engine test %d PASSED", i+1)
+		} else {
+			log.Printf("[CRYPT] AES engine test %d FAILED", i+1)
+
+		}
 
 	}
 
 }
 
 // encrypt string to base64 crypto using AES
-func FrameEncrypt(key []byte, text []byte) []byte {
+func FrameEncrypt(key []byte, text []byte) string {
 
 	plaintext := text
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println("[CRYPT] AES problem %s", err.Error())
-		return nil
+		return "="
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
@@ -54,7 +65,7 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		log.Println("[CRYPT] AES problem %s", err.Error())
-		return nil
+		return "="
 
 	}
 
@@ -62,12 +73,18 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
 
 	// return converted frame
-	return ciphertext
+
+	return base64.StdEncoding.EncodeToString(ciphertext)
 }
 
 // decrypt from base64 to decrypted string
-func FrameDecrypt(key []byte, cryptoText []byte) []byte {
-	ciphertext := cryptoText
+func FrameDecrypt(key []byte, cryptoText string) []byte {
+
+	ciphertext, err := base64.StdEncoding.DecodeString(cryptoText)
+	if err != nil {
+		log.Println("[AES][BASE64] Problem:", err)
+		return nil
+	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
