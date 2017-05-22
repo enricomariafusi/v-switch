@@ -6,6 +6,7 @@ import (
 	pl "V-switch/plane"
 	tap "V-switch/tap"
 	to "V-switch/tools"
+	_u "V-switch/udp"
 	"fmt"
 	"log"
 	"os"
@@ -23,6 +24,7 @@ func init() {
 	tap.EngineStart()
 	pl.PlaneInit()
 	aes.EngineStart()
+	_u.UDPEngineStart()
 
 }
 
