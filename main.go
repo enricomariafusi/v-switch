@@ -6,7 +6,7 @@ import (
 	pl "V-switch/plane"
 	tap "V-switch/tap"
 	to "V-switch/tools"
-	_u "V-switch/udp"
+	udp "V-switch/udp"
 	"fmt"
 	"log"
 	"os"
@@ -15,22 +15,22 @@ import (
 func init() {
 
 	if (os.Getuid() != 0) && (os.Getgid() != 0) {
-		fmt.Println("[OMG] YOU MUST BE ROOT TO RUN THIS PROGRAM , BECAUSE ONLY ROOT IS ALLOWED TO CREATE TAP DEVICES")
+		fmt.Println("[MAIN] YOU MUST BE ROOT TO RUN THIS PROGRAM , BECAUSE ONLY ROOT IS ALLOWED TO CREATE TAP DEVICES")
 		os.Exit(1)
 	}
 
 	to.LogEngineStart()
 	co.StartConfig()
-	tap.EngineStart()
 	pl.PlaneInit()
 	aes.EngineStart()
-	_u.UDPEngineStart()
+	tap.EngineStart()
+	udp.UDPEngineStart()
 
 }
 
 func main() {
 
-	log.Println("[OMG] End of bootstrap.")
+	log.Println("[MAIN] End of bootstrap.")
 
 	select {}
 

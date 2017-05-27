@@ -2,27 +2,29 @@ package tap
 
 import (
 	"V-switch/conf"
+	"V-switch/plane"
 	"fmt"
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/songgao/packets/ethernet"
 	"github.com/songgao/water"
 )
 
-type vswitchdevice struct {
+type Vswitchdevice struct {
 	devicename string
 	mtu        int
 	deviceif   water.Config
 	frame      ethernet.Frame
-	realif     *water.Interface
+	Realif     *water.Interface
 	err        error
 	mac        string
 }
 
 //This will represent the tap device when exported.
-var VDev vswitchdevice
+var VDev Vswitchdevice
 
 func init() {
 
@@ -30,7 +32,7 @@ func init() {
 	go VDev.tapDeviceInit() //this is blocking so it must be a new thread
 }
 
-func (vd *vswitchdevice) SetDeviceConf() {
+func (vd *Vswitchdevice) SetDeviceConf() {
 
 	if vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU")); vd.err != nil {
 		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
@@ -57,7 +59,7 @@ func (vd *vswitchdevice) SetDeviceConf() {
 //sudo ip addr add 10.1.0.10/24 dev <tapname>
 //sudo ip link set dev <tapname> up
 //ping -c1 -b 10.1.0.255
-func (vd *vswitchdevice) tapDeviceInit() {
+func (vd *Vswitchdevice) tapDeviceInit() {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -71,29 +73,56 @@ func (vd *vswitchdevice) tapDeviceInit() {
 		}
 	}()
 
-	vd.realif, vd.err = water.New(vd.deviceif)
+	vd.Realif, vd.err = water.New(vd.deviceif)
 	if vd.err != nil {
 		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
 		log.Println("[TAP][ERROR] Are you ROOT?")
 	} else {
 		tmp_if, _ := net.InterfaceByName(vd.devicename)
 		vd.mac = tmp_if.HardwareAddr.String()
+		plane.VSwitch.HAddr = strings.ToUpper(vd.mac)
 		log.Printf("[TAP] Success creating tap: <%s> at mac [%s] ", vd.devicename, vd.mac)
 	}
 
 	for {
-		var n int
-		n, vd.err = vd.realif.Read([]byte(vd.frame))
 
-		if vd.err != nil {
-			log.Printf("[TAP] Error reading tap: <%s>", vd.err)
-		} else {
-			vd.frame = vd.frame[:n]
-			log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), IsMacBcast(vd.frame.Destination().String()))
-			log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), IsMacBcast(vd.frame.Source().String()))
-			log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
-			log.Printf("Payload: % x\n", vd.frame.Payload())
-		}
+		vd.ReadFrame()
+
+	}
+
+}
+
+//returns mac address of the device we created
+func (vd *Vswitchdevice) GetTapMac() string {
+
+	macc, _ := net.ParseMAC(vd.mac)
+	if macc != nil {
+		log.Printf("[TAP] GetTapMac: %s", vd.mac)
+		return vd.mac
+
+	}
+
+	log.Printf("[TAP] GetTapMac: mac address is empty, using default one")
+	return "00:00:00:00:00:00"
+
+}
+
+func (vd *Vswitchdevice) ReadFrame() {
+
+	var n int
+	n, vd.err = vd.Realif.Read([]byte(vd.frame))
+
+	if vd.err != nil {
+		log.Printf("[TAP] Error reading tap: <%s>", vd.err)
+
+	} else {
+		vd.frame = vd.frame[:n]
+		log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), IsMacBcast(vd.frame.Destination().String()))
+		log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), IsMacBcast(vd.frame.Source().String()))
+		log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
+		log.Printf("Payload: % x\n", vd.frame.Payload())
+		plane.TapToPlane <- vd.frame
+
 	}
 
 }

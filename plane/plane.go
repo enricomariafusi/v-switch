@@ -9,9 +9,9 @@ import (
 type vswitchplane struct {
 	//ports map[net.HardwareAddr.String()]net.UDPAddr.String()
 	//Mapping from MAC address to UDP address
-	ports map[string]string
-
-	conns map[string]net.Conn
+	Ports map[string]string
+	Conns map[string]net.Conn
+	HAddr string
 }
 
 //V-Switch will be exported to UDP and to TAP
@@ -20,18 +20,18 @@ var VSwitch vswitchplane
 func init() {
 
 	log.Printf("[PLANE] TABLES INITIALIZED")
-	VSwitch.ports = make(map[string]string)
-	VSwitch.conns = make(map[string]net.Conn)
+	VSwitch.Ports = make(map[string]string)
+	VSwitch.Conns = make(map[string]net.Conn)
 
-	log.Printf("[PLANE] PORTS: %b", len(VSwitch.ports))
-	log.Printf("[PLANE] CONNS: %b", len(VSwitch.conns))
+	log.Printf("[PLANE] PORTS: %b", len(VSwitch.Ports))
+	log.Printf("[PLANE] CONNS: %b", len(VSwitch.Conns))
 
 }
 
 //Returns true if the MAC is known
-func (sw *vswitchplane) macIsKnown(mac net.HardwareAddr) bool {
+func (sw *vswitchplane) macIsKnown(mac string) bool {
 
-	_, exists := sw.ports[mac.String()]
+	_, exists := sw.Ports[mac]
 
 	return exists
 }
@@ -53,22 +53,24 @@ func (sw *vswitchplane) addPort(mac string, ind string) {
 		return
 	}
 
-	log.Printf("[PLANE][PORT][NEW] Added New port -> MAC %s to %s ", mac, ind)
-	sw.ports[hwaddr] = ind
+	log.Printf("[PLANE][PORT][ANN] Updated port -> MAC %s to %s ", mac, ind)
+	sw.Ports[hwaddr] = ind
 
 }
 
 //Adds a new conn into the plane
 func (sw *vswitchplane) addConn(mac string, conn net.Conn) {
 
-	_, err := net.ParseMAC(mac)
+	hwaddr := strings.ToUpper(mac)
+
+	_, err := net.ParseMAC(hwaddr)
 	if err != nil {
 		log.Printf("[PLANE][CONN][ERROR] %s is not a valid MAC address", mac)
 		return
 	}
 
 	log.Printf("[PLANE][CONN][NEW] Added New port -> MAC %s to %s ", mac, conn.RemoteAddr().String())
-	sw.conns[mac] = conn
+	sw.Conns[hwaddr] = conn
 
 }
 

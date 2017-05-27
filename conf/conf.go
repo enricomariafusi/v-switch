@@ -20,6 +20,8 @@ func init() {
 
 	readConfig(GConfigFile)
 
+	ConfCheck()
+
 }
 
 //StartConfig is used in main.init to trigger the init in the package conf
