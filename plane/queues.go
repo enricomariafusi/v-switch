@@ -11,8 +11,8 @@ import (
 var (
 	TapToPlane chan ethernet.Frame
 	PlaneToTap chan ethernet.Frame
-	UdpToPlane chan string
-	PlaneToUdp chan string
+	UdpToPlane chan []byte
+	PlaneToUdp chan []byte
 )
 
 func init() {
@@ -24,9 +24,9 @@ func init() {
 	}
 
 	TapToPlane = make(chan ethernet.Frame, queue_length)
-	UdpToPlane = make(chan string, queue_length)
+	UdpToPlane = make(chan []byte, queue_length)
 	PlaneToTap = make(chan ethernet.Frame, queue_length)
-	PlaneToUdp = make(chan string, queue_length)
+	PlaneToUdp = make(chan []byte, queue_length)
 	log.Println("[PLANE][QUEUES] Queues created with lenght: ", queue_length)
 
 }

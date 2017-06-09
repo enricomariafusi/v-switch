@@ -74,7 +74,7 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 			log.Println("[UDP][SERVER] Error while reading: ", err.Error())
 		} else {
 
-			plane.UdpToPlane <- string(buf[0:n])
+			plane.UdpToPlane <- buf[0:n]
 
 		}
 

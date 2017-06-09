@@ -6,7 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
+
 	"io"
 	"log"
 	"reflect"
@@ -49,14 +49,14 @@ func init() {
 }
 
 // encrypt string to base64 crypto using AES
-func FrameEncrypt(key []byte, text []byte) string {
+func FrameEncrypt(key []byte, text []byte) []byte {
 
 	plaintext := text
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println("[CRYPT] AES problem %s", err.Error())
-		return "="
+		return nil
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
@@ -65,7 +65,7 @@ func FrameEncrypt(key []byte, text []byte) string {
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		log.Println("[CRYPT] AES problem %s", err.Error())
-		return "="
+		return nil
 
 	}
 
@@ -74,17 +74,11 @@ func FrameEncrypt(key []byte, text []byte) string {
 
 	// return converted frame
 
-	return base64.StdEncoding.EncodeToString(ciphertext)
+	return ciphertext
 }
 
 // decrypt from base64 to decrypted string
-func FrameDecrypt(key []byte, cryptoText string) []byte {
-
-	ciphertext, err := base64.StdEncoding.DecodeString(cryptoText)
-	if err != nil {
-		log.Println("[AES][BASE64] Problem:", err)
-		return nil
-	}
+func FrameDecrypt(key []byte, ciphertext []byte) []byte {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {

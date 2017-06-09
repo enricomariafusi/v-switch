@@ -2,16 +2,21 @@ package tools
 
 import (
 	"bytes"
+	"encoding/gob"
 	"log"
 	"math/rand"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
 
 var letters = []rune("0123456789-+@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+type Tlv struct {
+	t       string // type of TLV
+	payload []byte
+}
 
 //RandSeq returns a random string
 func RandSeq(n int) string {
@@ -68,39 +73,37 @@ func AddrResolve(fqdn string) (addr string) {
 
 }
 
-func CreateTLV(typ string, payload string) []byte {
-
-	tmp_length := strconv.Itoa(len(payload))
+func CreateTLV(typ string, payload []byte) []byte {
 
 	var mybuffer bytes.Buffer
 
-	mybuffer.WriteString(typ)
-	mybuffer.WriteString(":")
-	mybuffer.WriteString(tmp_length)
-	mybuffer.WriteString(":")
-	mybuffer.WriteString(payload)
+	encoder := gob.NewEncoder(&mybuffer)
+
+	err := encoder.Encode(Tlv{typ, payload})
+	if err != nil {
+		log.Println("[TOOLS][TLV] Problem encoding")
+	}
 
 	return mybuffer.Bytes()
 
 }
 
-func UnPackTLV(mytlv string) (typ string, ln int, payload string) {
+func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
-	fields := strings.Split(mytlv, ":")
+	var mytlv Tlv
+	var mybuffer bytes.Buffer
 
-	if len(fields) != 3 {
-		log.Println("[TOOLS][TLV] Invalid TLV : ", mytlv)
-		return "N", 0, ""
+	decoder := gob.NewDecoder(&mybuffer)
+
+	mybuffer.Write(n_tlv)
+	err := decoder.Decode(&mytlv)
+	if err != nil {
+		log.Println("[TOOLS][TLV] Error recoding TLV")
+		return "", 0, nil
+
 	}
 
-	plen, _ := strconv.Atoi(fields[1])
-
-	if plen != len(fields[2]) {
-		log.Println("[TOOLS][TLV] Malformed TLV ")
-		return "N", 0, ""
-	}
-
-	return fields[0], plen, fields[2]
+	return mytlv.t, len(mytlv.payload), mytlv.payload
 
 }
 
