@@ -29,7 +29,8 @@ var VDev Vswitchdevice
 func init() {
 
 	VDev.SetDeviceConf()
-	go VDev.tapDeviceInit() //this is blocking so it must be a new thread
+	go VDev.ReadFrameThread()  //this is blocking so it must be a new thread
+	go VDev.WriteFrameThread() //thread which writes frames into the interface
 }
 
 func (vd *Vswitchdevice) SetDeviceConf() {
@@ -59,7 +60,7 @@ func (vd *Vswitchdevice) SetDeviceConf() {
 //sudo ip addr add 10.1.0.10/24 dev <tapname>
 //sudo ip link set dev <tapname> up
 //ping -c1 -b 10.1.0.255
-func (vd *Vswitchdevice) tapDeviceInit() {
+func (vd *Vswitchdevice) ReadFrameThread() {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -122,6 +123,20 @@ func (vd *Vswitchdevice) ReadFrame() {
 		log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
 		log.Printf("Payload: % x\n", vd.frame.Payload())
 		plane.TapToPlane <- vd.frame
+
+	}
+
+}
+
+func (vd *Vswitchdevice) WriteFrameThread() {
+
+	var n_frame ethernet.Frame
+	log.Printf("[TAP][WRITE] Tap writing thread started")
+
+	for {
+
+		n_frame = <-plane.PlaneToTap
+		vd.Realif.Write(n_frame)
 
 	}
 
