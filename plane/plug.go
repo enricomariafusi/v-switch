@@ -44,6 +44,7 @@ func SeedingTask(remote string) {
 		return
 	}
 	log.Println("[PLANE][UDP][SEED] Success connecting with ", remote)
+	mykey := conf.GetConfigItem("SWITCHID")
 
 	for {
 
@@ -59,7 +60,6 @@ func SeedingTask(remote string) {
 		}
 
 		myannounce := VSwitch.HAddr + "|" + myfqdn
-		mykey := conf.GetConfigItem("SWITCHID")
 
 		myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
 
