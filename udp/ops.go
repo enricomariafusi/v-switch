@@ -63,7 +63,7 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 
 	defer ServerConn.Close()
 
-	buf := make([]byte, tmp_MTU) // enough for the payload , even if encrypted and encoded base64
+	buf := make([]byte, tmp_MTU) // enough for the payload , even if encrypted ang gob encoded
 	log.Println("[UDP][SERVER] Read MTU set to ", tmp_MTU)
 
 	for {

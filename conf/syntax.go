@@ -73,7 +73,7 @@ func ConfCheck() {
 		saddr := GetConfigItem(c_item)
 
 		if _, err := net.ResolveUDPAddr("udp", saddr); err != nil {
-			log.Printf("[CONF][SYNTAX] %s is not a valid address for %s", saddr, c_item)
+			log.Printf("[CONF][SYNTAX] %s is not a valid address for %s: %s", saddr, c_item, err.Error())
 			os.Exit(1)
 
 		}

@@ -14,8 +14,8 @@ import (
 var letters = []rune("0123456789-+@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 type Tlv struct {
-	t       string // type of TLV
-	payload []byte
+	T       string // type of TLV
+	Payload []byte
 }
 
 //RandSeq returns a random string
@@ -81,7 +81,7 @@ func CreateTLV(typ string, payload []byte) []byte {
 
 	err := encoder.Encode(Tlv{typ, payload})
 	if err != nil {
-		log.Println("[TOOLS][TLV] Problem encoding")
+		log.Println("[TOOLS][TLV] Problem encoding: ", err.Error())
 	}
 
 	return mybuffer.Bytes()
@@ -103,7 +103,7 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
 	}
 
-	return mytlv.t, len(mytlv.payload), mytlv.payload
+	return mytlv.T, len(mytlv.Payload), mytlv.Payload
 
 }
 
