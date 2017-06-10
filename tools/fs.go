@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"log"
 	"os"
 )
 
@@ -11,6 +12,8 @@ func Hpwd() string {
 
 	if err != nil {
 		tmpLoc = "/tmp"
+		log.Printf("[TOOLS][FS] Problem getting unix pwd: %s", err.Error())
+
 	}
 
 	return tmpLoc

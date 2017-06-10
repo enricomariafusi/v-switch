@@ -13,37 +13,37 @@ func init() {
 
 	if conf.ConfigItemExists("SEED") {
 		seed_address := conf.GetConfigItem("SEED")
-		log.Println("[PLANE][UDP][SEED]: Starting SEED to: ", seed_address)
+		log.Println("[PLANE][PLUG]: Starting SEED to: ", seed_address)
 		go SeedingTask(seed_address)
 	} else {
-		log.Println("[PLANE][UDP][SEED]: No SEED configured, not joining existing switch")
+		log.Println("[PLANE][PLUG]: No SEED configured, not joining existing switch")
 	}
 
 }
 
 func SeedingTask(remote string) {
 
-	log.Println("[PLANE][UDP][SEED]: Creating conn with: ", remote)
+	log.Println("[PLANE][PLUG]: Creating conn with: ", remote)
 
 	ServerAddr, err := net.ResolveUDPAddr("udp", remote)
 	if err != nil {
-		log.Println("[PLANE][UDP][SEED] Bad destination address ", remote, ":", err.Error())
+		log.Println("[PLANE][PLUG] Bad destination address ", remote, ":", err.Error())
 		return
 	}
 
 	LocalAddr, err := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
 	if err != nil {
-		log.Println("[PLANE][UDP][SEED] Cannot find local port to bind ", remote, ":", err.Error())
+		log.Println("[PLANE][PLUG] Cannot find local port to bind ", remote, ":", err.Error())
 		return
 	}
 
 	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
 
 	if err != nil {
-		log.Println("[PLANE][UDP][SEED] Error connecting with ", remote, ":", err.Error())
+		log.Println("[PLANE][PLUG] Error connecting with ", remote, ":", err.Error())
 		return
 	}
-	log.Println("[PLANE][UDP][SEED] Success connecting with ", remote)
+	log.Println("[PLANE][PLUG] Success connecting with ", remote)
 	mykey := conf.GetConfigItem("SWITCHID")
 
 	for {
@@ -56,7 +56,7 @@ func SeedingTask(remote string) {
 			myfqdn = conf.GetConfigItem("PUBLIC")
 		} else {
 			myfqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
-			log.Println("[PLANE][UDP][SEED] dynamic hostid set to", myfqdn)
+			log.Println("[PLANE][PLUG] dynamic hostid set to", myfqdn)
 		}
 
 		myannounce := VSwitch.HAddr + "|" + myfqdn
@@ -67,7 +67,7 @@ func SeedingTask(remote string) {
 
 		_, err := Conn.Write(tlv)
 		if err != nil {
-			log.Println("[PLANE][UDP][SEED] Cannot announce to", remote)
+			log.Printf("[PLANE][PLUG] Cannot announce to %s : %s", remote, err.Error())
 		}
 
 		// then sends query
@@ -80,7 +80,7 @@ func SeedingTask(remote string) {
 
 		_, err = Conn.Write(tlv)
 		if err != nil {
-			log.Println("[PLANE][UDP][SEED] Cannot query to", remote)
+			log.Printf("[PLANE][PLUG] Cannot query to %s: %s", remote, err.Error())
 		}
 
 		time.Sleep(5 * time.Minute)

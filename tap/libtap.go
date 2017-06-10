@@ -3,6 +3,7 @@ package tap
 import (
 	"V-switch/conf"
 	"V-switch/plane"
+	"V-switch/tools"
 	"fmt"
 	"log"
 	"net"
@@ -67,7 +68,7 @@ func (vd *Vswitchdevice) ReadFrameThread() {
 			log.Println("[TAP][EXCEPTION] OH, SHIT.")
 			err, ok := e.(error)
 			if !ok {
-				err = fmt.Errorf("[TAPDRV]: %v", e)
+				err = fmt.Errorf("[TAP][DRV]: %v", e)
 			}
 			log.Printf("[TAP][EXCEPTION] Error: <%s>", err)
 
@@ -118,8 +119,8 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 	} else {
 		vd.frame = vd.frame[:n]
-		log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), IsMacBcast(vd.frame.Destination().String()))
-		log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), IsMacBcast(vd.frame.Source().String()))
+		log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
+		log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), tools.IsMacBcast(vd.frame.Source().String()))
 		log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
 		log.Printf("Payload: % x\n", vd.frame.Payload())
 		plane.TapToPlane <- vd.frame

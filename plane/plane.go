@@ -19,12 +19,12 @@ var VSwitch vswitchplane
 
 func init() {
 
-	log.Printf("[PLANE] TABLES INITIALIZED")
+	log.Printf("[PLANE][PLANE] TABLES INITIALIZED")
 	VSwitch.Ports = make(map[string]string)
 	VSwitch.Conns = make(map[string]net.Conn)
 
-	log.Printf("[PLANE] PORTS: %b", len(VSwitch.Ports))
-	log.Printf("[PLANE] CONNS: %b", len(VSwitch.Conns))
+	log.Printf("[PLANE][PLANE] PORTS: %b", len(VSwitch.Ports))
+	log.Printf("[PLANE][PLANE] CONNS: %b", len(VSwitch.Conns))
 
 }
 
@@ -43,13 +43,13 @@ func (sw *vswitchplane) addPort(mac string, ind string) {
 
 	_, err := net.ResolveUDPAddr("udp", ind)
 	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] %s is not a valid UDP address", ind)
+		log.Printf("[PLANE][PORT][ERROR] %s is not a valid UDP address: %s", ind, err.Error())
 		return
 	}
 
 	_, err = net.ParseMAC(mac)
 	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] %s is not a valid MAC address", mac)
+		log.Printf("[PLANE][PORT][ERROR] %s is not a valid MAC address: %s", mac, err.Error())
 		return
 	}
 
@@ -65,7 +65,7 @@ func (sw *vswitchplane) addConn(mac string, conn net.Conn) {
 
 	_, err := net.ParseMAC(hwaddr)
 	if err != nil {
-		log.Printf("[PLANE][CONN][ERROR] %s is not a valid MAC address", mac)
+		log.Printf("[PLANE][CONN][ERROR] %s is not a valid MAC address: %s", mac, err.Error())
 		return
 	}
 

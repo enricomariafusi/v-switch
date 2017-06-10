@@ -33,7 +33,7 @@ func GetLocalIp() string {
 
 	conn, err := net.Dial("udp", "255.255.255.255:80")
 	if err != nil {
-		log.Printf("[TOOLS][OS] : cannot use UDP")
+		log.Printf("[TOOLS][UTILS][OS] : cannot use UDP")
 		return "127.0.0.1" // wanted to use 0.0.0.0 but golang didn't get this
 	}
 	conn.Close()
@@ -46,7 +46,7 @@ func AddrResolve(fqdn string) (addr string) {
 	addresses, err := net.LookupIP(fqdn)
 
 	if err != nil {
-		log.Printf("[TOOLS][DNS] ERROR %s", err)
+		log.Printf("[TOOLS][UTILS][DNS] ERROR %s", err)
 		// protocol = "tcp4"
 		return "127.0.0.1"
 
@@ -54,7 +54,7 @@ func AddrResolve(fqdn string) (addr string) {
 
 		addr := addresses[0].String()
 
-		log.Printf("[TOOLS][DNS] Resolution ok: %s -> %s", fqdn, addr)
+		log.Printf("[TOOLS][UTILS][DNS] Resolution ok: %s -> %s", fqdn, addr)
 
 		if strings.Count(addr, ":") > 2 {
 			addr = "[" + addr + "]"
@@ -81,7 +81,7 @@ func CreateTLV(typ string, payload []byte) []byte {
 
 	err := encoder.Encode(Tlv{typ, payload})
 	if err != nil {
-		log.Println("[TOOLS][TLV] Problem encoding: ", err.Error())
+		log.Println("[TOOLS][UTILS][TLV] Problem encoding: ", err.Error())
 	}
 
 	return mybuffer.Bytes()
@@ -98,7 +98,7 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 	mybuffer.Write(n_tlv)
 	err := decoder.Decode(&mytlv)
 	if err != nil {
-		log.Println("[TOOLS][TLV] Error recoding TLV")
+		log.Println("[TOOLS][UTILS][TLV] Error recoding TLV")
 		return "", 0, nil
 
 	}

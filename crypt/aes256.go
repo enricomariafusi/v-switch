@@ -23,24 +23,24 @@ func init() {
 		key := []byte(conf.GetConfigItem("SWITCHID")) //32 BYTE fpr AES256
 
 		if len(key) != 32 {
-			log.Printf("[AES] Wrong key lenght (%d) ", len(key))
-			log.Println("[AES] AES256 cannot be shorter than 32 bytes. Generating a random one")
-			log.Println("[AES] PLEASE NOTICE THE SWITCH WILL BE ISOLATED")
+			log.Printf("[CRYPT][AES256] Wrong key lenght (%d) ", len(key))
+			log.Println("[CRYPT][AES256] AES256 cannot be shorter than 32 bytes. Generating a random one")
+			log.Println("[CRYPT][AES256] PLEASE NOTICE THE SWITCH WILL BE ISOLATED")
 			key = []byte(tools.RandSeq(32)) // 32 because of yes.
 			conf.SetConfigItem("SWITCHID", string(key[:]))
-			log.Printf("[AES] Your EXAMPLE safe key is: %s", key)
+			log.Printf("[CRYPT][AES256] Your EXAMPLE safe key is: %s", key)
 		}
 
 		encrypted := FrameEncrypt(key, originalText)
 		inverted := FrameDecrypt(key, encrypted)
 
-		log.Println("[CRYPT] Originaltext Len: ", len(originalText))
-		log.Println("[CRYPT] EncryptedText Len: ", len(encrypted))
+		log.Println("[CRYPT][AES256] Originaltext Len: ", len(originalText))
+		log.Println("[CRYPT][AES256] EncryptedText Len: ", len(encrypted))
 
 		if reflect.DeepEqual(inverted, originalText) {
-			log.Printf("[CRYPT] AES engine test %d PASSED", i+1)
+			log.Printf("[CRYPT][AES256] AES engine test %d PASSED", i+1)
 		} else {
-			log.Printf("[CRYPT] AES engine test %d FAILED", i+1)
+			log.Printf("[CRYPT][AES256] AES engine test %d FAILED", i+1)
 
 		}
 
@@ -55,7 +55,7 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Println("[CRYPT] AES problem %s", err.Error())
+		log.Println("[CRYPT][AES256] Algorithm problem %s", err.Error())
 		return nil
 	}
 
@@ -64,7 +64,7 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		log.Println("[CRYPT] AES problem %s", err.Error())
+		log.Println("[CRYPT][AES256] Algorithm problem %s", err.Error())
 		return nil
 
 	}
@@ -82,14 +82,14 @@ func FrameDecrypt(key []byte, ciphertext []byte) []byte {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Println("[CRYPT] AES problem %s", err.Error())
+		log.Println("[CRYPT][AES256] Algorithm problem %s", err.Error())
 		return nil
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
 	if len(ciphertext) < aes.BlockSize {
-		log.Println("[CRYPT] AES problem %s", err.Error())
+		log.Println("[CRYPT][AES256] Algorithm problem %s", err.Error())
 		return nil
 	}
 	iv := ciphertext[:aes.BlockSize]
@@ -106,6 +106,6 @@ func FrameDecrypt(key []byte, ciphertext []byte) []byte {
 //EngineStart triggers the init function in the package tap
 func EngineStart() {
 
-	log.Println("[CRYPT] AES Engine Init")
+	log.Println("[CRYPT][AES256] Engine Init")
 
 }

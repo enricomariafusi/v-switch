@@ -1,4 +1,4 @@
-package tap
+package tools
 
 import (
 	"strings"

@@ -17,11 +17,13 @@ func init() {
 
 func TLVInterpreter() {
 
+	var my_tlv []byte
+
 	for {
 
 		log.Println("[PLANE][TLV] TLV receive thread starts")
 
-		my_tlv := <-UdpToPlane
+		my_tlv = <-UdpToPlane
 
 		typ, _, payload := tools.UnPackTLV(my_tlv)
 
@@ -61,27 +63,27 @@ func UDPCreateConn(mac string, remote string) {
 		return
 	}
 
-	log.Println("[PLANE][UDP][CLIENT]: Creating port with: ", remote)
+	log.Println("[PLANE][TLV]: Creating port with: ", remote)
 
 	ServerAddr, err := net.ResolveUDPAddr("udp", remote)
 	if err != nil {
-		log.Println("[PLANE][UDP][CLIENT] Bad destination address ", remote, ":", err.Error())
+		log.Println("[PLANE][TLV] Bad destination address ", remote, ":", err.Error())
 		return
 	}
 
 	LocalAddr, err := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
 	if err != nil {
-		log.Println("[PLANE][UDP][CLIENT] Cannot find local port to bind ", remote, ":", err.Error())
+		log.Println("[PLANE][TLV] Cannot find local port to bind ", remote, ":", err.Error())
 		return
 	}
 
 	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
 
 	if err != nil {
-		log.Println("[PLANE][UDP][CLIENT] Error connecting with ", remote, ":", err.Error())
+		log.Println("[PLANE][TLV] Error connecting with ", remote, ":", err.Error())
 		return
 	}
-	log.Println("[PLANE][UDP][CLIENT] Success connecting with ", remote)
+	log.Println("[PLANE][TLV] Success connecting with ", remote)
 
 	VSwitch.addConn(mac, Conn)
 
@@ -89,7 +91,7 @@ func UDPCreateConn(mac string, remote string) {
 
 }
 
-func DispatchTLV(mytlv string, mac string) {
+func DispatchTLV(mytlv []byte, mac string) {
 
 	_, open_already := VSwitch.Conns[mac]
 
@@ -98,7 +100,7 @@ func DispatchTLV(mytlv string, mac string) {
 		go VSwitch.Conns[mac].Write([]byte(mytlv))
 
 	} else {
-		log.Println("[PLANE][UDP][DISPATCH] cannot dispatch, no connection available for ", mac)
+		log.Println("[PLANE][TLV][DISPATCH] cannot dispatch, no connection available for ", mac)
 		return
 	}
 
@@ -112,7 +114,7 @@ func AnnounceLocal(mac string) {
 		myfqdn = conf.GetConfigItem("PUBLIC")
 	} else {
 		myfqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
-		log.Println("[PLANE][UDP][ANNOUNCE] dynamic hostid set to", myfqdn)
+		log.Println("[PLANE][TLV][ANNOUNCE] dynamic hostid set to", myfqdn)
 	}
 
 	myannounce := VSwitch.HAddr + "|" + myfqdn
@@ -122,7 +124,7 @@ func AnnounceLocal(mac string) {
 
 	tlv := tools.CreateTLV("A", myannounce_enc)
 
-	DispatchTLV(string(tlv), mac)
+	DispatchTLV(tlv, mac)
 
 }
 
@@ -133,7 +135,7 @@ func AnnounceAlien(alien_mac string, mac string) {
 	if VSwitch.macIsKnown(alien_mac) {
 		myfqdn = VSwitch.Ports[alien_mac]
 	} else {
-		log.Println("[PLANE][UDP][ANNOUNCE][ALIEN] cannot announce unknown mac: ", alien_mac)
+		log.Println("[PLANE][TLV][ANNOUNCE][ALIEN] cannot announce unknown mac: ", alien_mac)
 		return
 	}
 
@@ -144,7 +146,7 @@ func AnnounceAlien(alien_mac string, mac string) {
 
 	tlv := tools.CreateTLV("A", myannounce_enc)
 
-	DispatchTLV(string(tlv), mac)
+	DispatchTLV(tlv, mac)
 
 }
 
@@ -157,6 +159,6 @@ func SendQueryToMac(mac string) {
 
 	tlv := tools.CreateTLV("Q", myannounce_enc)
 
-	DispatchTLV(string(tlv), mac)
+	DispatchTLV(tlv, mac)
 
 }
