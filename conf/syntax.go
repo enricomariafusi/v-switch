@@ -1,6 +1,8 @@
 package conf
 
 import (
+	"V-switch/tools"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -35,7 +37,9 @@ func ConfCheck() {
 
 	// now some checks for syntax
 
-	if _, err := strconv.Atoi(GetConfigItem("MTU")); err != nil {
+	Mtu, MtuErr := strconv.Atoi(GetConfigItem("MTU"))
+
+	if MtuErr != nil {
 		log.Println("[CONF][SYNTAX] Unacceptable value of MTU", GetConfigItem("MTU"))
 		os.Exit(1)
 	}
@@ -62,9 +66,12 @@ func ConfCheck() {
 		}
 	}
 
-	if len(GetConfigItem("SWITCHID")) != 32 {
+	if len(GetConfigItem("SWITCHID")) < Mtu {
 		log.Println("[CONF][SYNTAX] Unacceptable value of SWITCHID", GetConfigItem("SWITCHID"))
-		log.Println("[CONF][SYNTAX] It MUST be 32 char string with no spaces")
+		log.Println("[CONF][SYNTAX] It MUST be at least the same lenght of MTU: generating one for you")
+
+		SetConfigItem("SWITCHID", tools.RandSeq(Mtu))
+		fmt.Println("SWITCHID = ", GetConfigItem("SWITCHID"))
 		os.Exit(1)
 	}
 

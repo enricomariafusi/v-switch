@@ -22,7 +22,7 @@ func init() {
 	to.LogEngineStart()
 	co.StartConfig()
 	pl.PlaneInit()
-	aes.EngineStart()
+	aes.GPGEngineStart()
 	tap.EngineStart()
 	udp.UDPEngineStart()
 
