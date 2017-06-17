@@ -121,8 +121,9 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 	} else {
 		vd.frame = vd.frame[:n]
-		log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
+
 		log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), tools.IsMacBcast(vd.frame.Source().String()))
+		log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
 		log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
 		log.Printf("Payload: % x\n", vd.frame.Payload())
 		plane.TapToPlane <- vd.frame
@@ -140,7 +141,7 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 
 		n_frame = <-plane.PlaneToTap
 
-		log.Printf("[TAP][WRITE] Writing a frame %s to %s", n_frame.Source().String(), n_frame.Destination().String())
+		log.Printf("[TAP][WRITE] Writing frame from %s -> %s  to dev %s", n_frame.Source().String(), n_frame.Destination().String(), vd.devicename)
 		vd.Realif.Write(n_frame)
 
 	}
