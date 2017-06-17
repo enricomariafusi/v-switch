@@ -9,6 +9,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/songgao/packets/ethernet"
 	"github.com/songgao/water"
@@ -22,6 +23,7 @@ type Vswitchdevice struct {
 	Realif     *water.Interface
 	err        error
 	mac        string
+	sync.Mutex
 }
 
 //This will represent the tap device when exported.
@@ -112,7 +114,12 @@ func (vd *Vswitchdevice) GetTapMac() string {
 func (vd *Vswitchdevice) ReadFrame() {
 
 	var n int
+
+	vd.Lock()
+
 	n, vd.err = vd.Realif.Read([]byte(vd.frame))
+
+	vd.Unlock()
 
 	if vd.err != nil {
 		log.Printf("[TAP] Error reading tap: <%s>", vd.err)
@@ -137,8 +144,9 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 	for {
 
 		n_frame = <-plane.PlaneToTap
+		vd.Lock()
 		vd.Realif.Write(n_frame)
-
+		vd.Unlock()
 	}
 
 }
