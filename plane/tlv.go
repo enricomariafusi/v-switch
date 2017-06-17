@@ -94,9 +94,15 @@ func DispatchTLV(mytlv []byte, mac string) {
 
 	_, open_already := VSwitch.Conns[mac]
 
+	if mac == VSwitch.HAddr {
+		log.Printf("[PLANE][TLV][DISPATCH] %s is myself : no need to dispatch", mac, VSwitch.HAddr)
+		return
+	}
+
 	if open_already {
 
-		go VSwitch.Conns[mac].Write([]byte(mytlv))
+		VSwitch.Conns[mac].Write([]byte(mytlv))
+		log.Printf("[PLANE][TLV][DISPATCH] Dispatching to %s", mac)
 
 	} else {
 		log.Println("[PLANE][TLV][DISPATCH] cannot dispatch, no connection available for ", mac)
