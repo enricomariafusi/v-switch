@@ -9,7 +9,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/songgao/packets/ethernet"
 	"github.com/songgao/water"
@@ -23,7 +22,6 @@ type Vswitchdevice struct {
 	Realif     *water.Interface
 	err        error
 	mac        string
-	sync.Mutex
 }
 
 //This will represent the tap device when exported.
@@ -32,8 +30,25 @@ var VDev Vswitchdevice
 func init() {
 
 	VDev.SetDeviceConf()
-	go VDev.ReadFrameThread()  //this is blocking so it must be a new thread
-	go VDev.WriteFrameThread() //thread which writes frames into the interface
+	go VDev.ReadFrameThread() //this is blocking so it must be a new thread
+	RDev := VDev.AliasDev()
+	go RDev.WriteFrameThread() //thread which writes frames into the interface
+}
+
+func (vd *Vswitchdevice) AliasDev() Vswitchdevice {
+
+	var alias Vswitchdevice
+
+	alias.devicename = vd.devicename
+	alias.mtu = vd.mtu
+	alias.deviceif = vd.deviceif
+	alias.frame = vd.frame
+	alias.Realif = vd.Realif
+	alias.err = vd.err
+	alias.mac = vd.mac
+
+	return alias
+
 }
 
 func (vd *Vswitchdevice) SetDeviceConf() {
@@ -115,11 +130,7 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 	var n int
 
-	vd.Lock()
-
 	n, vd.err = vd.Realif.Read([]byte(vd.frame))
-
-	vd.Unlock()
 
 	if vd.err != nil {
 		log.Printf("[TAP] Error reading tap: <%s>", vd.err)
@@ -145,12 +156,9 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 
 		n_frame = <-plane.PlaneToTap
 
-		vd.Lock()
-
 		log.Printf("[TAP][WRITE] Writing a frame %s to %s", n_frame.Source().String(), n_frame.Destination().String())
 		vd.Realif.Write(n_frame)
 
-		vd.Unlock()
 	}
 
 }
