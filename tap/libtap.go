@@ -31,24 +31,8 @@ func init() {
 
 	VDev.SetDeviceConf()
 	go VDev.ReadFrameThread() //this is blocking so it must be a new thread
-	RDev := VDev.AliasDev()
-	go RDev.WriteFrameThread() //thread which writes frames into the interface
-}
-
-func (vd *Vswitchdevice) AliasDev() Vswitchdevice {
-
-	var alias Vswitchdevice
-
-	alias.devicename = vd.devicename
-	alias.mtu = vd.mtu
-	alias.deviceif = vd.deviceif
-	alias.frame = vd.frame
-	alias.Realif = vd.Realif
-	alias.err = vd.err
-	alias.mac = vd.mac
-
-	return alias
-
+	WDev := VDev
+	go WDev.WriteFrameThread() //thread which writes frames into the interface
 }
 
 func (vd *Vswitchdevice) SetDeviceConf() {
@@ -71,6 +55,17 @@ func (vd *Vswitchdevice) SetDeviceConf() {
 
 	vd.deviceif.Name = vd.devicename
 
+	vd.Realif, vd.err = water.New(vd.deviceif)
+	if vd.err != nil {
+		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
+		log.Println("[TAP][ERROR] Are you ROOT?")
+	} else {
+		tmp_if, _ := net.InterfaceByName(vd.devicename)
+		vd.mac = tmp_if.HardwareAddr.String()
+		plane.VSwitch.HAddr = strings.ToUpper(vd.mac)
+		log.Printf("[TAP] Success creating tap: <%s> at mac [%s] ", vd.devicename, vd.mac)
+	}
+
 }
 
 //creates a TAP device with name specified as argument
@@ -91,17 +86,6 @@ func (vd *Vswitchdevice) ReadFrameThread() {
 
 		}
 	}()
-
-	vd.Realif, vd.err = water.New(vd.deviceif)
-	if vd.err != nil {
-		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
-		log.Println("[TAP][ERROR] Are you ROOT?")
-	} else {
-		tmp_if, _ := net.InterfaceByName(vd.devicename)
-		vd.mac = tmp_if.HardwareAddr.String()
-		plane.VSwitch.HAddr = strings.ToUpper(vd.mac)
-		log.Printf("[TAP] Success creating tap: <%s> at mac [%s] ", vd.devicename, vd.mac)
-	}
 
 	for {
 
