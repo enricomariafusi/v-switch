@@ -5,6 +5,7 @@ import (
 	"V-switch/crypt"
 	"V-switch/tools"
 	"log"
+	"strings"
 
 	"github.com/songgao/packets/ethernet"
 )
@@ -35,12 +36,12 @@ func TapInterpreterThread() {
 
 			for mac, _ := range VSwitch.Ports {
 
-				DispatchTLV(mytlv, mac)
+				DispatchTLV(mytlv, strings.ToUpper(mac))
 			}
 
 		} else {
 
-			DispatchTLV(mytlv, mymacaddr)
+			DispatchTLV(mytlv, strings.ToUpper(mymacaddr))
 
 		}
 
