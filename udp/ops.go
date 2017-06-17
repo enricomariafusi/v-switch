@@ -68,7 +68,7 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 
 	for {
 		n, addr, err := ServerConn.ReadFromUDP(buf)
-		log.Println("[UDP][SERVER] Received ", string(buf[0:n]), " from ", addr.String()) // just for debug
+		log.Println("[UDP][SERVER] Received ", n, "bytes from ", addr.String()) // just for debug
 
 		if err != nil {
 			log.Println("[UDP][SERVER] Error while reading: ", err.Error())

@@ -144,8 +144,12 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 	for {
 
 		n_frame = <-plane.PlaneToTap
+
 		vd.Lock()
+
+		log.Printf("[TAP][WRITE] Writing a frame %s to %s", n_frame.Source().String(), n_frame.Destination().String())
 		vd.Realif.Write(n_frame)
+
 		vd.Unlock()
 	}
 

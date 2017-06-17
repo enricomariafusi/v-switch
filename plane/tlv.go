@@ -18,10 +18,9 @@ func init() {
 func TLVInterpreter() {
 
 	var my_tlv []byte
+	log.Println("[PLANE][TLV] TLV receive thread starts")
 
 	for {
-
-		log.Println("[PLANE][TLV] TLV receive thread starts")
 
 		my_tlv = <-UdpToPlane
 
