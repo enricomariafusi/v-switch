@@ -26,9 +26,8 @@ var VDev Vswitchdevice
 func init() {
 
 	VDev.SetDeviceConf()
-	go VDev.ReadFrameThread() //this is blocking so it must be a new thread
-	WDev := VDev
-	go WDev.WriteFrameThread() //thread which writes frames into the interface
+	go VDev.ReadFrameThread()  //this is blocking so it must be a new thread
+	go VDev.WriteFrameThread() //thread which writes frames into the interface
 }
 
 func (vd *Vswitchdevice) SetDeviceConf() {
@@ -140,9 +139,9 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 
 		n, err := vd.Realif.Write(n_frame)
 		if err != nil {
-			log.Printf("[TAP][WRITE][ERROR] Error writing to %s : %s", vd.devicename, err.Error())
+			log.Printf("[TAP][WRITE][ERROR] Error writing %d bytes to %s : %s", len(n_frame), vd.devicename, err.Error())
 		} else {
-			log.Printf("[TAP][WRITE] %d long frame  from %s -> %s  to dev %s", n, tools.MACSource(n_frame).String(), tools.MACDestination(n_frame).String(), vd.devicename)
+			log.Printf("[TAP][WRITE] %d long frame of %d , from %s -> %s  to dev %s", n, len(n_frame), tools.MACSource(n_frame).String(), tools.MACDestination(n_frame).String(), vd.devicename)
 		}
 
 	}
