@@ -30,19 +30,21 @@ func TLVInterpreter() {
 
 		// it is a frame
 		case "F":
-			PlaneToTap <- crypt.FrameDecrypt([]byte(conf.GetConfigItem("SWITCHID")), payload)
+			PlaneToTap <- crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
 			// someone is announging itself
 		case "A":
-			announce := crypt.FrameDecrypt([]byte(conf.GetConfigItem("SWITCHID")), payload)
+			announce := crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
 			fields := strings.Split(string(announce), "|")
-			if len(fields) == 2 {
+			if len(fields) == 3 {
 				VSwitch.addPort(fields[0], fields[1])
 				UDPCreateConn(fields[0], fields[1])
+				tools.AddARPentry(fields[0], fields[2], VSwitch.DevN)
 			}
 		case "Q":
-			sourcemac := crypt.FrameDecrypt([]byte(conf.GetConfigItem("SWITCHID")), payload)
+			sourcemac := crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
 			for alienmac, _ := range VSwitch.Ports {
 				AnnounceAlien(alienmac, string(sourcemac))
+
 			}
 
 		default:
@@ -119,7 +121,7 @@ func AnnounceLocal(mac string) {
 
 	mac = strings.ToUpper(mac)
 
-	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn
+	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
 	mykey := conf.GetConfigItem("SWITCHID")
 
 	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))

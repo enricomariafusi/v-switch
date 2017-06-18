@@ -15,6 +15,9 @@ type vswitchplane struct {
 	Conns map[string]net.Conn
 	HAddr string
 	Fqdn  string
+	IPAdd string
+	SwID  string
+	DevN  string
 }
 
 //V-Switch will be exported to UDP and to TAP
@@ -36,6 +39,10 @@ func init() {
 		VSwitch.Fqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
 		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
 	}
+
+	VSwitch.IPAdd = conf.GetConfigItem("DEVICEADDR")
+	VSwitch.DevN = conf.GetConfigItem("DEVICENAME")
+	VSwitch.SwID = conf.GetConfigItem("SWITCHID")
 
 }
 
