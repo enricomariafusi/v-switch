@@ -25,6 +25,7 @@ func TapInterpreterThread() {
 	for {
 
 		myframe = <-TapToPlane
+		log.Printf("[PLANE][ETH] Read %d frame from channel", len(myframe))
 		mymacaddr = tools.MACDestination(myframe).String()
 		ekey = []byte(conf.GetConfigItem("SWITCHID"))
 		encframe = crypt.FrameEncrypt(ekey, myframe)

@@ -16,8 +16,8 @@ const (
 )
 
 type device struct {
-	nr, nw string
-	r, w   *os.File
+	n string
+	f *os.File
 }
 
 var (
@@ -41,43 +41,35 @@ type Interface interface {
 	// implement io.Closer interface, must be called when done with TUN/TAP interface
 	Close() error
 
+	// Sync the data into the tap file
+	Sync() error
+
 	// return string representation of TUN/TAP interface
 	String() string
 }
 
-func (d *device) Name() string                { return d.nr }
-func (d *device) String() string              { return d.nr }
-func (d *device) Close() error                { return errors.New(d.w.Close().Error() + d.r.Close().Error()) }
-func (d *device) Read(p []byte) (int, error)  { return d.r.Read(p) }
-func (d *device) Write(p []byte) (int, error) { return d.w.Write(p) }
+func (d *device) Name() string                { return d.n }
+func (d *device) String() string              { return d.n }
+func (d *device) Close() error                { return d.f.Close() }
+func (d *device) Read(p []byte) (int, error)  { return d.f.Read(p) }
+func (d *device) Write(p []byte) (int, error) { return d.f.Write(p) }
+func (d *device) Sync() error                 { return d.f.Sync() }
 
 func newTAP(name string) (Interface, error) {
 
 	// creating parallel  kernel pipe for reading
 
-	file_r, err := os.OpenFile("/dev/net/tun", os.O_RDWR, 0)
+	file, err := os.OpenFile("/dev/net/tun", os.O_RDWR, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	iface_r, err := createTuntapInterface(file_r.Fd(), name, cIFF_TAP|cIFF_NO_PI|cIFF_MULTI_QUEUE)
+	iface, err := createTuntapInterface(file.Fd(), name, cIFF_TAP|cIFF_NO_PI|cIFF_MULTI_QUEUE)
 	if err != nil {
 		return nil, err
 	}
 
-	// now open the parallel pipeline for writing
-
-	file_w, err := os.OpenFile("/dev/net/tun", os.O_RDWR, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	iface_w, err := createTuntapInterface(file_w.Fd(), name, cIFF_TAP|cIFF_NO_PI|cIFF_MULTI_QUEUE)
-	if err != nil {
-		return nil, err
-	}
-
-	return &device{nr: iface_r, nw: iface_w, r: file_r, w: file_w}, nil
+	return &device{n: iface, f: file}, nil
 }
 
 type tuntapInterface struct {

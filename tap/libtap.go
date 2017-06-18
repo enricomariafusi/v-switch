@@ -116,10 +116,11 @@ func (vd *Vswitchdevice) ReadFrame() {
 		//log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
 		//log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
 		//log.Printf("Payload: % x\n", vd.frame.Payload())
-		log.Printf("Size: %d\n", n)
-		log.Printf("Frame(%d): % x\n", len(vd.frame), vd.frame)
+		log.Printf("[TAP][READ] Size: %d\n", n)
+		log.Printf("[TAP][READ] Frame(%d): % x\n", len(vd.frame), vd.frame)
 
 		plane.TapToPlane <- vd.frame
+		log.Printf("[TAP][READ] Frame sent to Plane")
 
 	}
 
@@ -140,6 +141,11 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 			log.Printf("[TAP][WRITE][ERROR] Error writing %d bytes to %s : %s", len(n_frame), vd.devicename, err.Error())
 		} else {
 			log.Printf("[TAP][WRITE] %d long frame of %d , from %s -> %s  to dev %s", n, len(n_frame), tools.MACSource(n_frame).String(), tools.MACDestination(n_frame).String(), vd.devicename)
+		}
+
+		err = vd.Realif.Sync()
+		if err != nil {
+			log.Printf("[TAP][WRITE] Error syncing %s: %s", vd.devicename, err.Error())
 		}
 
 	}
