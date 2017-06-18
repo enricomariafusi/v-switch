@@ -1,6 +1,8 @@
 package plane
 
 import (
+	"V-switch/conf"
+	"V-switch/tools"
 	"log"
 	"net"
 	"strings"
@@ -12,6 +14,7 @@ type vswitchplane struct {
 	Ports map[string]string
 	Conns map[string]net.Conn
 	HAddr string
+	Fqdn  string
 }
 
 //V-Switch will be exported to UDP and to TAP
@@ -26,12 +29,22 @@ func init() {
 	log.Printf("[PLANE][PLANE] PORTS: %b", len(VSwitch.Ports))
 	log.Printf("[PLANE][PLANE] CONNS: %b", len(VSwitch.Conns))
 
+	if conf.ConfigItemExists("PUBLIC") {
+		VSwitch.Fqdn = conf.GetConfigItem("PUBLIC")
+		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
+	} else {
+		VSwitch.Fqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
+		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
+	}
+
 }
 
 //Returns true if the MAC is known
 func (sw *vswitchplane) macIsKnown(mac string) bool {
 
-	_, exists := sw.Ports[mac]
+	hwaddr := strings.ToUpper(mac)
+
+	_, exists := sw.Ports[hwaddr]
 
 	return exists
 }
@@ -47,18 +60,18 @@ func (sw *vswitchplane) addPort(mac string, ind string) {
 		return
 	}
 
-	_, err = net.ParseMAC(mac)
+	_, err = net.ParseMAC(hwaddr)
 	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] [ %s ] is not a valid MAC address: %s", mac, err.Error())
+		log.Printf("[PLANE][PORT][ERROR] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
 		return
 	}
 
-	if mac == sw.HAddr {
-		log.Printf("[PLANE][PORT][NOOP] [ %s ] = %s : no need to add", mac, sw.HAddr)
+	if hwaddr == sw.HAddr {
+		log.Printf("[PLANE][PORT][NOOP] [ %s ] = %s : no need to add", hwaddr, sw.HAddr)
 		return
 	}
 
-	log.Printf("[PLANE][PORT][ANN] Updated port -> MAC %s to %s ", mac, ind)
+	log.Printf("[PLANE][PORT][ANN] Updated port -> MAC %s to %s ", hwaddr, ind)
 	sw.Ports[hwaddr] = ind
 
 }
@@ -70,16 +83,16 @@ func (sw *vswitchplane) addConn(mac string, conn net.Conn) {
 
 	_, err := net.ParseMAC(hwaddr)
 	if err != nil {
-		log.Printf("[PLANE][CONN][ERROR] [ %s ] is not a valid MAC address: %s", mac, err.Error())
+		log.Printf("[PLANE][CONN][ERROR] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
 		return
 	}
 
 	if mac == sw.HAddr {
-		log.Printf("[PLANE][PORT][NOOP] %s = %s : no need to add", mac, sw.HAddr)
+		log.Printf("[PLANE][PORT][NOOP] %s = %s : no need to add", hwaddr, sw.HAddr)
 		return
 	}
 
-	log.Printf("[PLANE][CONN][NEW] Added New port -> MAC %s -> %s ", mac, conn.RemoteAddr().String())
+	log.Printf("[PLANE][CONN][NEW] Added New port -> MAC %s -> %s ", hwaddr, conn.RemoteAddr().String())
 	sw.Conns[hwaddr] = conn
 
 }

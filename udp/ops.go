@@ -59,7 +59,7 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 
 	tmp_MTU, _ := strconv.Atoi(conf.GetConfigItem("MTU")) // encryption of MTU max size
 
-	tmp_MTU = 2 * (tmp_MTU + 32) // how much is the max payload by the base64 encoding overhead plus TLV
+	tmp_MTU = 2 * tmp_MTU // how much is the max payload by the base64 encoding overhead plus TLV
 
 	defer ServerConn.Close()
 
@@ -74,7 +74,7 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 			log.Println("[UDP][SERVER] Error while reading: ", err.Error())
 		} else {
 
-			plane.UdpToPlane <- buf[0:n]
+			plane.UdpToPlane <- buf[:n]
 
 		}
 

@@ -18,7 +18,7 @@ func init() {
 func TLVInterpreter() {
 
 	var my_tlv []byte
-	log.Println("[PLANE][TLV] TLV receive thread starts")
+	log.Println("[PLANE][TLV][INTERPRETER] Thread starts")
 
 	for {
 
@@ -56,6 +56,8 @@ func TLVInterpreter() {
 
 func UDPCreateConn(mac string, remote string) {
 
+	mac = strings.ToUpper(mac)
+
 	_, open_already := VSwitch.Conns[mac]
 
 	if open_already {
@@ -92,6 +94,8 @@ func UDPCreateConn(mac string, remote string) {
 
 func DispatchTLV(mytlv []byte, mac string) {
 
+	mac = strings.ToUpper(mac)
+
 	_, open_already := VSwitch.Conns[mac]
 
 	if mac == VSwitch.HAddr {
@@ -113,16 +117,9 @@ func DispatchTLV(mytlv []byte, mac string) {
 
 func AnnounceLocal(mac string) {
 
-	var myfqdn string
+	mac = strings.ToUpper(mac)
 
-	if conf.ConfigItemExists("PUBLIC") {
-		myfqdn = conf.GetConfigItem("PUBLIC")
-	} else {
-		myfqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
-		log.Println("[PLANE][TLV][ANNOUNCE] dynamic hostid set to", myfqdn)
-	}
-
-	myannounce := VSwitch.HAddr + "|" + myfqdn
+	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn
 	mykey := conf.GetConfigItem("SWITCHID")
 
 	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
@@ -135,16 +132,9 @@ func AnnounceLocal(mac string) {
 
 func AnnounceAlien(alien_mac string, mac string) {
 
-	var myfqdn string
+	mac = strings.ToUpper(mac)
 
-	if VSwitch.macIsKnown(alien_mac) {
-		myfqdn = VSwitch.Ports[alien_mac]
-	} else {
-		log.Println("[PLANE][TLV][ANNOUNCE][ALIEN] cannot announce unknown mac: ", alien_mac)
-		return
-	}
-
-	myannounce := strings.ToUpper(alien_mac) + "|" + myfqdn
+	myannounce := strings.ToUpper(alien_mac) + "|" + VSwitch.Fqdn
 	mykey := conf.GetConfigItem("SWITCHID")
 
 	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
@@ -156,6 +146,8 @@ func AnnounceAlien(alien_mac string, mac string) {
 }
 
 func SendQueryToMac(mac string) {
+
+	mac = strings.ToUpper(mac)
 
 	myannounce := VSwitch.HAddr
 	mykey := conf.GetConfigItem("SWITCHID")

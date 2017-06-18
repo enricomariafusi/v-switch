@@ -49,18 +49,19 @@ func SeedingTask(remote string) {
 
 	for {
 
-		// first, sends the announce
+		_, e := net.ParseMAC(VSwitch.HAddr)
 
-		var myfqdn string
-
-		if conf.ConfigItemExists("PUBLIC") {
-			myfqdn = conf.GetConfigItem("PUBLIC")
+		if e != nil {
+			log.Println("[PLANE][PLUG] Waiting 10 seconds the MAC is there")
+			time.Sleep(10 * time.Second)
+			continue
 		} else {
-			myfqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
-			log.Println("[PLANE][PLUG] dynamic hostid set to", myfqdn)
+			log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 		}
 
-		myannounce := VSwitch.HAddr + "|" + myfqdn
+		// first, sends the announce
+
+		myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn
 
 		myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
 
@@ -68,7 +69,7 @@ func SeedingTask(remote string) {
 
 		_, err := Conn.Write(tlv)
 		if err != nil {
-			log.Printf("[PLANE][PLUG] Cannot announce to %s : %s", remote, err.Error())
+			log.Printf("[PLANE][PLUG] Cannot announce to %s : %s", myannounce, err.Error())
 		}
 
 		// then sends query
