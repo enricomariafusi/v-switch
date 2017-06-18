@@ -43,18 +43,18 @@ func (sw *vswitchplane) addPort(mac string, ind string) {
 
 	_, err := net.ResolveUDPAddr("udp", ind)
 	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] %s is not a valid UDP address: %s", ind, err.Error())
+		log.Printf("[PLANE][PORT][ERROR] [ %s ] is not a valid UDP address: %s", ind, err.Error())
 		return
 	}
 
 	_, err = net.ParseMAC(mac)
 	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] %s is not a valid MAC address: %s", mac, err.Error())
+		log.Printf("[PLANE][PORT][ERROR] [ %s ] is not a valid MAC address: %s", mac, err.Error())
 		return
 	}
 
 	if mac == sw.HAddr {
-		log.Printf("[PLANE][PORT][NOOP] %s = %s : no need to add", mac, sw.HAddr)
+		log.Printf("[PLANE][PORT][NOOP] [ %s ] = %s : no need to add", mac, sw.HAddr)
 		return
 	}
 

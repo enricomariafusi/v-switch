@@ -6,8 +6,6 @@ import (
 	"V-switch/tools"
 	"log"
 	"strings"
-
-	"github.com/songgao/packets/ethernet"
 )
 
 func init() {
@@ -18,7 +16,7 @@ func init() {
 
 func TapInterpreterThread() {
 
-	var myframe ethernet.Frame
+	var myframe []byte
 	var mymacaddr string
 	var mytlv []byte
 	var encframe []byte
@@ -27,7 +25,7 @@ func TapInterpreterThread() {
 	for {
 
 		myframe = <-TapToPlane
-		mymacaddr = myframe.Destination().String()
+		mymacaddr = tools.MACDestination(myframe).String()
 		ekey = []byte(conf.GetConfigItem("SWITCHID"))
 		encframe = crypt.FrameEncrypt(ekey, myframe)
 		mytlv = tools.CreateTLV("F", encframe)

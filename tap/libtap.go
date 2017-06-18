@@ -9,17 +9,13 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
-	"github.com/songgao/packets/ethernet"
-	"github.com/songgao/water"
 )
 
 type Vswitchdevice struct {
 	devicename string
 	mtu        int
-	deviceif   water.Config
-	frame      ethernet.Frame
-	Realif     *water.Interface
+	frame      []byte
+	Realif     Interface
 	err        error
 	mac        string
 }
@@ -39,23 +35,19 @@ func (vd *Vswitchdevice) SetDeviceConf() {
 
 	if vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU")); vd.err != nil {
 		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
-		vd.frame.Resize(1500)
+		vd.mtu = 1500
+		vd.frame = make([]byte, vd.mtu+42)
 		log.Printf("[TAP] Using the default of 1500. Hope is fine.")
 	} else {
-		vd.frame.Resize(vd.mtu)
+		vd.frame = make([]byte, vd.mtu+42)
 		log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
 	}
 
 	vd.devicename = conf.GetConfigItem("DEVICENAME")
 	log.Printf("[TAP] Devicename in conf is: %v", vd.devicename)
 
-	vd.deviceif = water.Config{
-		DeviceType: water.TAP,
-	}
+	vd.Realif, vd.err = newTAP(vd.devicename)
 
-	vd.deviceif.Name = vd.devicename
-
-	vd.Realif, vd.err = water.New(vd.deviceif)
 	if vd.err != nil {
 		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
 		log.Println("[TAP][ERROR] Are you ROOT?")
@@ -114,18 +106,22 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 	var n int
 
-	n, vd.err = vd.Realif.Read([]byte(vd.frame))
+	n, vd.err = vd.Realif.Read(vd.frame)
 
 	if vd.err != nil {
 		log.Printf("[TAP] Error reading tap: <%s>", vd.err)
 
 	} else {
+
+		//log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), tools.IsMacBcast(vd.frame.Source().String()))
+		//log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
+		//log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
+		//log.Printf("Payload: % x\n", vd.frame.Payload())
+		log.Printf("Size: %d\n", n)
+		log.Printf("Frame(%d): % x\n", len(vd.frame), vd.frame)
+
 		vd.frame = vd.frame[:n]
 
-		log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), tools.IsMacBcast(vd.frame.Source().String()))
-		log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
-		log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
-		log.Printf("Payload: % x\n", vd.frame.Payload())
 		plane.TapToPlane <- vd.frame
 
 	}
@@ -134,15 +130,20 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 func (vd *Vswitchdevice) WriteFrameThread() {
 
-	var n_frame ethernet.Frame
+	var n_frame []byte
+
 	log.Printf("[TAP][WRITE] Tap writing thread started")
 
 	for {
 
 		n_frame = <-plane.PlaneToTap
 
-		log.Printf("[TAP][WRITE] Writing frame from %s -> %s  to dev %s", n_frame.Source().String(), n_frame.Destination().String(), vd.devicename)
-		vd.Realif.Write(n_frame)
+		n, err := vd.Realif.Write(n_frame)
+		if err != nil {
+			log.Printf("[TAP][WRITE][ERROR] Error writing to %s : %s", vd.devicename, err.Error())
+		} else {
+			log.Printf("[TAP][WRITE] %d long frame  from %s -> %s  to dev %s", n, tools.MACSource(n_frame).String(), tools.MACDestination(n_frame).String(), vd.devicename)
+		}
 
 	}
 
