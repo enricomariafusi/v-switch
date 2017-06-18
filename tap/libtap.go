@@ -117,6 +117,7 @@ func (vd *Vswitchdevice) ReadFrame() {
 		//log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
 		//log.Printf("Payload: % x\n", vd.frame.Payload())
 		log.Printf("[TAP][READ] Size: %d\n", n)
+		vd.frame = tools.CleanFrame(vd.frame)
 		log.Printf("[TAP][READ] Frame(%d): % x\n", len(vd.frame), vd.frame)
 
 		plane.TapToPlane <- vd.frame

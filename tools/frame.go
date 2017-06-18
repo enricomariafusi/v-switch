@@ -2,6 +2,7 @@ package tools
 
 import (
 	"net"
+	"strings"
 )
 
 func IsMacBcast(mac string) bool {
@@ -30,4 +31,11 @@ func IsBroadcast(addr net.HardwareAddr) bool {
 
 func IsIPv4Multicast(addr net.HardwareAddr) bool {
 	return addr[0] == 0x01 && addr[1] == 0x00 && addr[2] == 0x5e
+}
+
+func CleanFrame(frame []byte) []byte {
+	s := string(frame)
+	s = strings.TrimRight(s, "\x00")
+	return []byte(s)
+
 }
