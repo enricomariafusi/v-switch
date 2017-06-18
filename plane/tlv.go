@@ -123,6 +123,7 @@ func AnnounceLocal(mac string) {
 
 	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
 	mykey := conf.GetConfigItem("SWITCHID")
+	log.Println("[PLANE][ANNOUNCELOCAL] Announcing  ", myannounce)
 
 	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
 

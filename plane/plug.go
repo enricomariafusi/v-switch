@@ -61,7 +61,7 @@ func SeedingTask(remote string) {
 
 		// first, sends the announce
 
-		myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn
+		myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
 
 		myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
 
