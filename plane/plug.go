@@ -6,6 +6,7 @@ import (
 	"V-switch/tools"
 	"log"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -83,7 +84,9 @@ func SeedingTask(remote string) {
 			log.Printf("[PLANE][PLUG] Cannot query to %s: %s", remote, err.Error())
 		}
 
-		time.Sleep(5 * time.Minute)
+		cycle, _ := strconv.Atoi(conf.GetConfigItem("TTL"))
+
+		time.Sleep(time.Duration(cycle) * time.Second)
 
 	}
 
