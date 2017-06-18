@@ -119,8 +119,6 @@ func (vd *Vswitchdevice) ReadFrame() {
 		log.Printf("Size: %d\n", n)
 		log.Printf("Frame(%d): % x\n", len(vd.frame), vd.frame)
 
-		vd.frame = vd.frame[:n]
-
 		plane.TapToPlane <- vd.frame
 
 	}
