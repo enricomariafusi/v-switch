@@ -23,7 +23,7 @@ func AddARPentry(mac string, ip string, dev string) {
 	}
 
 	//ip neigh add 130.122.130.77 lladdr A2:77:35:FA:1E:F5 dev tap0
-	arpcmd := exec.Command("ip", "neigh", "replace", ip, "lladdr", hwaddr, "dev", dev, "nud", "reachable")
+	arpcmd := exec.Command("ip", "neigh", "replace", ip, "lladdr", hwaddr, "dev", dev, "nud", "noarp")
 
 	err = arpcmd.Run()
 

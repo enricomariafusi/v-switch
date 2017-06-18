@@ -112,15 +112,9 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 	} else {
 
-		//log.Printf("Src: %s , Broadcast :%t\n", vd.frame.Source(), tools.IsMacBcast(vd.frame.Source().String()))
-		//log.Printf("Dst: %s , Broadcast :%t\n", vd.frame.Destination(), tools.IsMacBcast(vd.frame.Destination().String()))
-		//log.Printf("Ethertype: % x\n", vd.frame.Ethertype())
-		//log.Printf("Payload: % x\n", vd.frame.Payload())
-		log.Printf("[TAP][READ] Size: %d\n", n)
-		vd.frame = tools.CleanFrame(vd.frame)
-		log.Printf("[TAP][READ] Frame(%d): % x\n", len(vd.frame), vd.frame)
-
-		plane.TapToPlane <- vd.frame
+		cleanframe := tools.CleanFrame(vd.frame)
+		log.Printf("[TAP][READ] Read Size: %d , Real size %d, Clean size %d", n, len(vd.frame), len(cleanframe))
+		plane.TapToPlane <- cleanframe
 		log.Printf("[TAP][READ] Frame sent to Plane")
 
 	}
