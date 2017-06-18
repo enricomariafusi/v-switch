@@ -3,18 +3,37 @@ package plane
 import (
 	"V-switch/conf"
 	"V-switch/crypt"
+
 	"V-switch/tools"
 	"log"
+	"net"
 	"strings"
+	"time"
 )
 
 func init() {
 
 	go TapInterpreterThread()
-	log.Printf("[PLANE][ETH] Ethernet Thread initialized")
+
 }
 
 func TapInterpreterThread() {
+
+	log.Printf("[PLANE][ETH] Ethernet Thread initialized")
+
+	for {
+
+		_, e := net.ParseMAC(VSwitch.HAddr)
+
+		if e != nil {
+			log.Println("[PLANE][ETH] Waiting 10 seconds device is there")
+			time.Sleep(10 * time.Second)
+
+		} else {
+			break
+		}
+
+	}
 
 	var myframe []byte
 	var mymacaddr string

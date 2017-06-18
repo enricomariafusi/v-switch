@@ -143,11 +143,6 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 			log.Printf("[TAP][WRITE] %d long frame of %d , from %s -> %s  to dev %s", n, len(n_frame), tools.MACSource(n_frame).String(), tools.MACDestination(n_frame).String(), vd.devicename)
 		}
 
-		err = vd.Realif.Sync()
-		if err != nil {
-			log.Printf("[TAP][WRITE] Error syncing %s: %s", vd.devicename, err.Error())
-		}
-
 	}
 
 }
