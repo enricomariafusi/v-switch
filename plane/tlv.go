@@ -46,7 +46,7 @@ func TLVInterpreter() {
 			}
 
 		default:
-			log.Println("[PLANE][TLV][INTERPRETER] Unknown type, discarded: ", typ)
+			log.Println("[PLANE][TLV][INTERPRETER] Unknown type, discarded: [ ", typ, " ]")
 
 		}
 

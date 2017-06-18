@@ -53,8 +53,8 @@ func (vd *Vswitchdevice) SetDeviceConf() {
 		log.Println("[TAP][ERROR] Are you ROOT?")
 	} else {
 		tmp_if, _ := net.InterfaceByName(vd.devicename)
-		vd.mac = tmp_if.HardwareAddr.String()
-		plane.VSwitch.HAddr = strings.ToUpper(vd.mac)
+		vd.mac = strings.ToUpper(tmp_if.HardwareAddr.String())
+		plane.VSwitch.HAddr = vd.mac
 		log.Printf("[TAP] Success creating tap: <%s> at mac [%s] ", vd.devicename, vd.mac)
 	}
 
@@ -93,7 +93,7 @@ func (vd *Vswitchdevice) GetTapMac() string {
 	macc, _ := net.ParseMAC(vd.mac)
 	if macc != nil {
 		log.Printf("[TAP] GetTapMac: %s", vd.mac)
-		return vd.mac
+		return strings.ToUpper(vd.mac)
 
 	}
 

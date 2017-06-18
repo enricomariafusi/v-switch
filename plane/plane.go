@@ -70,7 +70,7 @@ func (sw *vswitchplane) addConn(mac string, conn net.Conn) {
 
 	_, err := net.ParseMAC(hwaddr)
 	if err != nil {
-		log.Printf("[PLANE][CONN][ERROR] %s is not a valid MAC address: %s", mac, err.Error())
+		log.Printf("[PLANE][CONN][ERROR] [ %s ] is not a valid MAC address: %s", mac, err.Error())
 		return
 	}
 
@@ -79,7 +79,7 @@ func (sw *vswitchplane) addConn(mac string, conn net.Conn) {
 		return
 	}
 
-	log.Printf("[PLANE][CONN][NEW] Added New port -> MAC %s to %s ", mac, conn.RemoteAddr().String())
+	log.Printf("[PLANE][CONN][NEW] Added New port -> MAC %s -> %s ", mac, conn.RemoteAddr().String())
 	sw.Conns[hwaddr] = conn
 
 }
