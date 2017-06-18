@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -15,7 +16,7 @@ type Vswitchdevice struct {
 	devicename string
 	mtu        int
 	frame      []byte
-	Realif     Interface
+	Realif     *TapConn
 	err        error
 	mac        string
 }
@@ -35,21 +36,25 @@ func (vd *Vswitchdevice) SetDeviceConf() {
 	if vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU")); vd.err != nil {
 		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
 		vd.mtu = 1500
-		vd.frame = make([]byte, vd.mtu)
+		vd.frame = make([]byte, vd.mtu+14)
 		log.Printf("[TAP] Using the default of 1500. Hope is fine.")
 	} else {
-		vd.frame = make([]byte, vd.mtu)
+		vd.frame = make([]byte, vd.mtu+14)
 		log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
 	}
 
 	vd.devicename = conf.GetConfigItem("DEVICENAME")
 	log.Printf("[TAP] Devicename in conf is: %v", vd.devicename)
 
-	vd.Realif, vd.err = newTAP(vd.devicename)
+	//	vd.Realif, vd.err = newTAP(vd.devicename)
 
+	vd.Realif = new(TapConn)
+	vd.err = vd.Realif.Open(uint(vd.mtu), vd.devicename)
 	if vd.err != nil {
 		log.Printf("[TAP][ERROR] Error creating tap: <%s>", vd.err)
 		log.Println("[TAP][ERROR] Are you ROOT?")
+		os.Exit(1)
+
 	} else {
 		tmp_if, _ := net.InterfaceByName(vd.devicename)
 		vd.mac = strings.ToUpper(tmp_if.HardwareAddr.String())

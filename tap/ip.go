@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
@@ -33,7 +34,9 @@ func SetIpAddress() {
 	my_dev_name := conf.GetConfigItem("DEVICENAME")
 	my_ipnetmask := conf.GetConfigItem("DEVICEMASK")
 
-	ifcnfg := exec.Command("ifconfig", my_dev_name, plane.VSwitch.IPAdd, "netmask", my_ipnetmask)
+	eth_mtu, _ := strconv.Atoi(conf.GetConfigItem("MTU"))
+
+	ifcnfg := exec.Command("ifconfig", my_dev_name, plane.VSwitch.IPAdd, "netmask", my_ipnetmask, "mtu", strconv.Itoa(eth_mtu))
 
 	err := ifcnfg.Run()
 	if err != nil {

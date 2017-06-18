@@ -1,92 +1,105 @@
 package tap
 
 import (
-	"errors"
-	"os"
-	"strings"
+	"fmt"
+	"log"
 	"syscall"
 	"unsafe"
 )
 
-const (
-	cIFF_TUN         = 0x0001 // Not to be used
-	cIFF_TAP         = 0x0002 // This is to make the device to behave as a TAP
-	cIFF_NO_PI       = 0x1000
-	cIFF_MULTI_QUEUE = 0x0100 // being able to write and read at the same moment
-)
+// Here we use syscalls, which are written in c. So that, this is go c-style
 
-type device struct {
-	n string
-	f *os.File
+type TapConn struct {
+	fd     int
+	ifname string
 }
 
-var (
-	ErrBusy        = errors.New("device is already in use")
-	ErrNotReady    = errors.New("device is not ready")
-	ErrExhausted   = errors.New("no devices are available")
-	ErrUnsupported = errors.New("device is unsupported on this platform")
-)
+func (tap_conn *TapConn) Open(mtu uint, name string) (err error) {
 
-// Interface represents a TUN/TAP network interface
-type Interface interface {
-	// return name of TUN/TAP interface
-	Name() string
+	tap_conn.ifname = name
+	log.Printf("[TAP][SYS] Interface name is <%s>", tap_conn.ifname)
 
-	// implement io.Reader interface, read bytes into p from TUN/TAP interface
-	Read(p []byte) (n int, err error)
+	// Open the tap/tun device
 
-	// implement io.Writer interface, write bytes from p to TUN/TAP interface
-	Write(p []byte) (n int, err error)
-
-	// implement io.Closer interface, must be called when done with TUN/TAP interface
-	Close() error
-
-	// Sync the data into the tap file
-	Sync() error
-
-	// return string representation of TUN/TAP interface
-	String() string
-}
-
-func (d *device) Name() string                { return d.n }
-func (d *device) String() string              { return d.n }
-func (d *device) Close() error                { return d.f.Close() }
-func (d *device) Read(p []byte) (int, error)  { return d.f.Read(p) }
-func (d *device) Write(p []byte) (int, error) { return d.f.Write(p) }
-func (d *device) Sync() error                 { return d.f.Sync() }
-
-func newTAP(name string) (Interface, error) {
-
-	// creating parallel  kernel pipe for reading
-
-	file, err := os.OpenFile("/dev/net/tun", os.O_RDWR, 0)
+	tap_conn.fd, err = syscall.Open("/dev/net/tun", syscall.O_RDWR, syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IRGRP|syscall.S_IROTH)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("Error opening device /dev/net/tun: %s", err)
 	}
 
-	iface, err := createTuntapInterface(file.Fd(), name, cIFF_TAP|cIFF_NO_PI|cIFF_MULTI_QUEUE)
+	// Prepare a struct ifreq structure for TUNSETIFF with tap settings
+	// IFF_TAP: tap device, IFF_NO_PI: no extra packet information
+	ifr_flags := uint16(syscall.IFF_TAP | syscall.IFF_NO_PI)
+	// FIXME: Assumes little endian
+	ifr_struct := make([]byte, 32)
+	ifr_struct[16] = byte(ifr_flags)
+	ifr_struct[17] = byte(ifr_flags >> 8)
+	copy(ifr_struct[0:15], tap_conn.ifname)
+	r0, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(tap_conn.fd), syscall.TUNSETIFF, uintptr(unsafe.Pointer(&ifr_struct[0])))
+	if r0 != 0 {
+		tap_conn.Close()
+		return fmt.Errorf("Error setting tun/tap type: %s", err)
+	} else {
+		log.Printf("[TAP][SYS] TAP device %s created", tap_conn.ifname)
+	}
+
+	// Create a raw socket for our tap interface, so we can set the MTU
+	tap_sockfd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, syscall.ETH_P_ALL)
 	if err != nil {
-		return nil, err
+		tap_conn.Close()
+		return fmt.Errorf("Error creating packet socket: %s", err)
+	}
+	// We won't need the socket after we've set the MTU and brought the interface up
+	defer syscall.Close(tap_sockfd)
+
+	// Bind the raw socket to our tap interface
+	err = syscall.BindToDevice(tap_sockfd, tap_conn.ifname)
+	if err != nil {
+		tap_conn.Close()
+		return fmt.Errorf("Error binding packet socket to tap interface: %s", err)
 	}
 
-	return &device{n: iface, f: file}, nil
-}
-
-type tuntapInterface struct {
-	Name  [0x10]byte
-	Flags uint16
-	pad   [0x28 - 0x10 - 2]byte
-}
-
-func createTuntapInterface(fd uintptr, name string, flags uint16) (string, error) {
-	var req tuntapInterface
-	req.Flags = flags
-	copy(req.Name[:], name)
-
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&req)))
-	if errno != 0 {
-		return "", errno
+	// Prepare a ifreq structure for SIOCSIFMTU with MTU setting
+	ifr_mtu := mtu
+	// FIXME: Assumes little endian
+	ifr_struct[16] = byte(ifr_mtu)
+	ifr_struct[17] = byte(ifr_mtu >> 8)
+	ifr_struct[18] = byte(ifr_mtu >> 16)
+	ifr_struct[19] = byte(ifr_mtu >> 24)
+	r0, _, err = syscall.Syscall(syscall.SYS_IOCTL, uintptr(tap_sockfd), syscall.SIOCSIFMTU, uintptr(unsafe.Pointer(&ifr_struct[0])))
+	if r0 != 0 {
+		tap_conn.Close()
+		return fmt.Errorf("Error setting MTU on tap interface: %s", err)
 	}
 
-	return strings.Trim(string(req.Name[:]), "\x00"), nil
+	// Get the current interface flags in ifr_struct
+	r0, _, err = syscall.Syscall(syscall.SYS_IOCTL, uintptr(tap_sockfd), syscall.SIOCGIFFLAGS, uintptr(unsafe.Pointer(&ifr_struct[0])))
+	if r0 != 0 {
+		tap_conn.Close()
+		return fmt.Errorf("Error getting tap interface flags: %s", err)
+	}
+	// Update the interface flags to bring the interface up
+	// FIXME: Assumes little endian
+	ifr_flags = uint16(ifr_struct[16]) | (uint16(ifr_struct[17]) << 8)
+	ifr_flags |= syscall.IFF_UP | syscall.IFF_RUNNING
+	ifr_struct[16] = byte(ifr_flags)
+	ifr_struct[17] = byte(ifr_flags >> 8)
+	r0, _, err = syscall.Syscall(syscall.SYS_IOCTL, uintptr(tap_sockfd), syscall.SIOCSIFFLAGS, uintptr(unsafe.Pointer(&ifr_struct[0])))
+	if r0 != 0 {
+		tap_conn.Close()
+		return fmt.Errorf("Error bringing up tap interface: %s", err)
+	}
+
+	return nil
+}
+
+func (tap_conn *TapConn) Close() {
+	syscall.Close(tap_conn.fd)
+}
+
+func (tap_conn *TapConn) Read(b []byte) (n int, err error) {
+	return syscall.Read(tap_conn.fd, b)
+}
+
+func (tap_conn *TapConn) Write(b []byte) (n int, err error) {
+	return syscall.Write(tap_conn.fd, b)
 }
