@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 type vswitchlogfile struct {
 	filename string
 	logfile  *os.File
+	active   bool
 }
 
 func init() {
@@ -45,18 +47,38 @@ func (lf *vswitchlogfile) RotateLogFolder() {
 // sets the log folder
 func (lf *vswitchlogfile) SetLogFolder() {
 
-	const layout = "2006-01-02.15"
+	if lf.active {
 
-	orario := time.Now()
+		const layout = "2006-01-02.15"
 
-	var currentFolder = Hpwd()
-	lf.filename = filepath.Join(currentFolder, "logs", "vswitch."+orario.Format(layout)+"00.log")
-	log.Println("[TOOLS][LOG] Logfile is: " + lf.filename)
+		orario := time.Now()
 
-	lf.logfile, _ = os.Create(lf.filename)
+		var currentFolder = Hpwd()
+		lf.filename = filepath.Join(currentFolder, "logs", "vswitch."+orario.Format(layout)+"00.log")
+		log.Println("[TOOLS][LOG] Logfile is: " + lf.filename)
 
-	log.SetPrefix("V-SWITCH> ")
-	log.SetOutput(lf.logfile)
+		lf.logfile, _ = os.Create(lf.filename)
+
+		log.SetPrefix("V-SWITCH> ")
+
+		log.SetOutput(lf.logfile)
+	} else {
+		log.SetOutput(ioutil.Discard)
+	}
+
+}
+
+// enables logging
+func (lf *vswitchlogfile) EnableLog() {
+
+	lf.active = true
+
+}
+
+func (lf *vswitchlogfile) DisableLog() {
+
+	lf.active = false
+	log.SetOutput(ioutil.Discard)
 
 }
 
