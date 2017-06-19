@@ -57,13 +57,13 @@ func (lf *vswitchlogfile) SetLogFolder() {
 
 		var currentFolder = Hpwd()
 		lf.filename = filepath.Join(currentFolder, "logs", "vswitch."+orario.Format(layout)+"00.log")
-		log.Println("[TOOLS][LOG] Logfile is: " + lf.filename)
 
 		lf.logfile, _ = os.Create(lf.filename)
 
 		log.SetPrefix("V-SWITCH> ")
-
+		log.Println("[TOOLS][LOG] Logfile is: " + lf.filename)
 		log.SetOutput(lf.logfile)
+
 	} else {
 		log.SetOutput(ioutil.Discard)
 	}
