@@ -18,6 +18,9 @@ func ConfCheck() {
 		"QUEUE",
 		"SWITCHID",
 		"TTL",
+		"DEBUG",
+		"DEVICEADDR",
+		"DEVICEMASK",
 	}
 
 	OptionalItems := []string{
@@ -76,6 +79,18 @@ func ConfCheck() {
 			log.Println("[CONF][SYNTAX] Unacceptable value of TTL ", GetConfigItem("TTL"))
 			os.Exit(1)
 		}
+	}
+
+	if ip := net.ParseIP(GetConfigItem("DEVICEADDR")); ip == nil {
+		log.Println("[CONF][SYNTAX] Unacceptable value of DEVICEADDR ", GetConfigItem("DEVICEADDR"))
+		os.Exit(1)
+
+	}
+
+	if ip := net.ParseIP(GetConfigItem("DEVICEMASK")); ip == nil {
+		log.Println("[CONF][SYNTAX] Unacceptable value of DEVICEMASK ", GetConfigItem("DEVICEMASK"))
+		os.Exit(1)
+
 	}
 
 	if len(GetConfigItem("SWITCHID")) < Mtu {
