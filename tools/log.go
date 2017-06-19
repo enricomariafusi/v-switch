@@ -14,6 +14,8 @@ type vswitchlogfile struct {
 	active   bool
 }
 
+var VSlogfile vswitchlogfile
+
 func init() {
 
 	// just the first time
@@ -21,10 +23,9 @@ func init() {
 	os.MkdirAll(filepath.Join(currentFolder, "logs"), 0755)
 	//
 
-	var mylogfile vswitchlogfile
-	mylogfile.active = true
-	mylogfile.SetLogFolder()
-	go mylogfile.RotateLogFolder()
+	VSlogfile.active = true
+	VSlogfile.SetLogFolder()
+	go VSlogfile.RotateLogFolder()
 
 }
 
