@@ -6,7 +6,7 @@ import (
 	"log"
 	"net"
 	"os/exec"
-	"strconv"
+
 	"time"
 )
 
@@ -31,16 +31,14 @@ func SetIpAddress() {
 
 	}
 
-	my_dev_name := conf.GetConfigItem("DEVICENAME")
-	my_ipnetmask := conf.GetConfigItem("DEVICEMASK")
+	my_ipnetmask := plane.VSwitch.IPAdd + "/" + conf.GetConfigItem("DEVICEMASK")
 
-	eth_mtu, _ := strconv.Atoi(conf.GetConfigItem("MTU"))
-
-	ifcnfg := exec.Command("ifconfig", my_dev_name, plane.VSwitch.IPAdd, "netmask", my_ipnetmask, "mtu", strconv.Itoa(eth_mtu))
+	// ifcnfg := exec.Command("ifconfig", my_dev_name, plane.VSwitch.IPAdd, "netmask", my_ipnetmask, "mtu", strconv.Itoa(eth_mtu))
+	ifcnfg := exec.Command("ip", "address", "add", my_ipnetmask, "dev", plane.VSwitch.DevN)
 
 	err := ifcnfg.Run()
 	if err != nil {
-		log.Printf("[TAP][IP] Error executing  %q", ifcnfg.Args)
+		log.Printf("[TAP][IP] Error executing  %q: %s", ifcnfg.Args, err.Error())
 	} else {
 		log.Printf("[TAP][IP] Executed   %q", ifcnfg.Args)
 	}

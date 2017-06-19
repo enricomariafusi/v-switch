@@ -22,6 +22,7 @@ func init() {
 	//
 
 	var mylogfile vswitchlogfile
+	mylogfile.active = true
 	mylogfile.SetLogFolder()
 	go mylogfile.RotateLogFolder()
 
