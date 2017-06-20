@@ -13,6 +13,8 @@ V-Switch will take care to self-configure the interface and to keep the ARP tabl
 
 Ready for testing (it works with 2 nodes) TODO:
 
-1. CONFIGURATION GUIDE
-2. LINT code.
+1. ~~TEST WITH 2 NODES~~
+1. TEST WITH MORE NODES
+2. CONFIGURATION GUIDE
+3. LINT code.
 
