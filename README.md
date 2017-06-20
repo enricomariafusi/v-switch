@@ -7,6 +7,8 @@ will have a device configured, which behaves like it was cabled to the same phys
 The aim is to create a LAN across the internet or inside the cloud, where the machine just appears to be connected
 each others on layer 2. Adding a new machine to the switch will advertise each other machine _without the need to provision them_ , **unlike Tinc**. Once you have the same key, you are in.
 
+Encryption is using AES256 + the GPG container, meaning the key MUST be as long as the MTU. This makes the flow relatively safe.
+
 Ideally, when the cloud will autoscale, all the bundles with v-switch installed will "automagically" plug into the virtual switch. (then, to run a dhcp daemon on a port would allow to give the IP address, like it was a real switch). 
 
 
