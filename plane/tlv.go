@@ -131,7 +131,7 @@ func AnnounceLocal(mac string) {
 
 }
 
-// FIXME this is not correct : it should announce an alien on its address!!!
+// Announces  port which is not ours
 func AnnounceAlien(alien_mac string, mac string) {
 
 	mac = strings.ToUpper(mac)

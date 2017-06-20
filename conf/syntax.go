@@ -124,6 +124,26 @@ func ConfCheck() {
 		os.Exit(1)
 	}
 
+	if GetConfigItem("SEED") == "MASTER" {
+		log.Println("[CONF][SYNTAX] NODE IS CONFIGURED AS MASTER, NO SEED ")
+
+	} else {
+		if _, aerr := net.ResolveUDPAddr("udp", GetConfigItem("SEED")); aerr != nil {
+			log.Println("[CONF][SYNTAX] SEED is not a valid IP:PORT", GetConfigItem("SEED"))
+			os.Exit(1)
+		}
+	}
+
+	if h := GetConfigItem("PUBLIC"); h == "HOSTNAME" {
+		log.Println("[CONF][SYNTAX] This node has its own DNS entry/public IP, NO NAT ")
+
+	} else {
+		if _, aerr := net.ResolveUDPAddr("udp", h); aerr != nil {
+			log.Println("[CONF][SYNTAX] PUBLIC  is not a valid IP:PORT", h)
+			os.Exit(1)
+		}
+	}
+
 	log.Println("[CONF][SYNTAX] Conf syntax OK")
 
 }

@@ -12,19 +12,25 @@ import (
 
 func init() {
 
-	if conf.ConfigItemExists("SEED") {
-		seed_address := conf.GetConfigItem("SEED")
+	if conf.ConfigItemExists("SEED") == false {
+		conf.SetConfigItem("SEED", "MASTER")
+	}
+
+	seed_address := conf.GetConfigItem("SEED")
+
+	if seed_address == "MASTER" {
+		log.Println("[PLANE][PLUG]: NO SEED, We are master node: Yay! ")
+	} else {
+
 		log.Println("[PLANE][PLUG]: Starting SEED to: ", seed_address)
 		go SeedingTask(seed_address)
-	} else {
-		log.Println("[PLANE][PLUG]: No SEED configured, not joining existing switch")
 	}
 
 }
 
 func SeedingTask(remote string) {
 
-	log.Println("[PLANE][PLUG]: Creating conn with: ", remote)
+	log.Println("[PLANE][PLUG]: Creating conn with SEED: ", remote)
 
 	ServerAddr, err := net.ResolveUDPAddr("udp", remote)
 	if err != nil {
