@@ -9,9 +9,9 @@ import (
 )
 
 type Sport struct {
-	EndPoint net.UDPAddr // IP:PORT of the remote peer
-	Socket   net.UDPConn // Connection to the remote peer
-	EthIP    net.IPAddr  // Ip on the interface of remote peer.
+	EndPoint *net.UDPAddr // IP:PORT of the remote peer
+	Socket   *net.UDPConn // Connection to the remote peer
+	EthIP    *net.IPAddr  // Ip on the interface of remote peer.
 }
 
 type vswitchplane struct {
@@ -90,6 +90,11 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 		return
 	}
 
+	if (VSwitch.HAddr == mac) && (VSwitch.Fqdn == endpoint) {
+		log.Printf("[PLANE][PORT][ADD] [ %s -> %s ] This is ourself, not adding", mac, endpoint)
+		return
+	}
+
 	endpoint_net, errb := net.ResolveUDPAddr("udp", endpoint)
 	if errb != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid UDP address: %s", endpoint, err.Error())
@@ -102,25 +107,40 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 		return
 	}
 
+	// if the MAC is known and data are the same, no need to change
 	if sw.macIsKnown(mac) {
-		sw.RemoveMAC(mac)
+		tmp_endpoint := sw.SPlane[mac].EndPoint
+		tmp_remoteip := sw.SPlane[mac].EthIP
+		if (endpoint == tmp_endpoint.String()) && (remoteip == tmp_remoteip.String()) {
+			return
+		} else {
+			sw.RemoveMAC(mac)
+		}
+
 	}
 
 	var port Sport
 
-	port.EndPoint = *endpoint_net
-	port.EthIP = *remoteip_net
-	netsocket, neterr := net.DialUDP("udp", nil, endpoint_net)
+	port.EndPoint = endpoint_net
+	port.EthIP = remoteip_net
+
+	LocalAddr, _ := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
+
+	netsocket, neterr := net.DialUDP("udp", LocalAddr, endpoint_net)
 	if neterr != nil {
 		log.Println("[PLANE][PLANE][ADD] Error connecting with [", endpoint, "]:", neterr.Error())
 		return
 	} else {
-		port.Socket = *netsocket
+		port.Socket = netsocket
 	}
 
 	sw.SPlane[mac] = port
 
-	tools.AddARPentry(mac, remoteip, VSwitch.DevN)
+	if mac != VSwitch.HAddr {
+
+		tools.AddARPentry(mac, remoteip, VSwitch.DevN)
+
+	}
 
 }
 

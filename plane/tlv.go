@@ -41,8 +41,8 @@ func TLVInterpreter() {
 			// someone is announging itself
 		case "A":
 			announce := string(payload)
-			fields := strings.Split(announce, "|")
-			if len(fields) == 3 {
+			if strings.Count(announce, "|") == 2 {
+				fields := strings.Split(announce, "|")
 				VSwitch.AddMac(fields[0], fields[1], fields[2])
 			}
 		case "Q":
@@ -68,8 +68,9 @@ func DispatchTLV(mytlv []byte, mac string) {
 	if VSwitch.macIsKnown(mac) {
 
 		osocket := VSwitch.SPlane[mac].Socket
-		log.Printf("[PLANE][TLV][DISPATCH] Dispatching to %s (%s)", mac, osocket.RemoteAddr().String())
+
 		_, err := osocket.Write([]byte(mytlv))
+		log.Printf("[PLANE][TLV][DISPATCH] Dispatched %d BYTES to %s (%s): %t", len(mytlv), mac, osocket.RemoteAddr().String(), err == nil)
 		if err != nil {
 			log.Println("[PLANE][TLV][DISPATCH] cannot dispatch: ", err.Error())
 		}
