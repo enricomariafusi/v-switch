@@ -11,7 +11,7 @@ Encryption is using AES256 + the GPG container, meaning the key MUST be as long 
 
 V-Switch will take care to self-configure the interface and to keep the ARP table updated on your kernel using the linux netlink interface (ip).
 
-Ready for testing (it works) TODO:
+Ready for testing (it works with 2 nodes) TODO:
 
 1. CONFIGURATION GUIDE
 2. LINT code.
