@@ -47,7 +47,7 @@ func SeedingTask(remote string) {
 	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
 
 	if err != nil {
-		log.Println("[PLANE][PLUG] Error connecting with ", remote, ":", err.Error())
+		log.Println("[PLANE][PLUG] Error connecting with [", remote, "]:", err.Error())
 		return
 	}
 	log.Println("[PLANE][PLUG] Success connecting with ", remote)
