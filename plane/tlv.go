@@ -1,7 +1,6 @@
 package plane
 
 import (
-	"V-switch/conf"
 	"V-switch/crypt"
 	"V-switch/tools"
 	"log"
@@ -17,24 +16,33 @@ func init() {
 
 func TLVInterpreter() {
 
-	var my_tlv []byte
+	var my_tlv_enc []byte
 	log.Println("[PLANE][TLV][INTERPRETER] Thread starts")
 
 	for {
 
-		my_tlv = <-UdpToPlane
+		my_tlv_enc = <-UdpToPlane
 
-		typ, _, payload := tools.UnPackTLV(my_tlv)
+		my_tlv := crypt.FrameDecrypt([]byte(VSwitch.SwID), my_tlv_enc)
+		if my_tlv == nil {
+			continue
+		}
+
+		typ, ln, payload := tools.UnPackTLV(my_tlv)
+
+		if ln == 0 {
+			continue
+		}
 
 		switch typ {
 
 		// it is a frame
 		case "F":
-			PlaneToTap <- crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
+			PlaneToTap <- payload
 			// someone is announging itself
 		case "A":
-			announce := crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
-			fields := strings.Split(string(announce), "|")
+			announce := string(payload)
+			fields := strings.Split(announce, "|")
 			if len(fields) == 3 {
 				radd, _ := net.ResolveUDPAddr("udp", fields[1])
 				rip, _ := net.ResolveIPAddr("ip", fields[2])
@@ -43,7 +51,7 @@ func TLVInterpreter() {
 				VSwitch.addRemoteIp(fields[0], *rip)
 			}
 		case "Q":
-			sourcemac := crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
+			sourcemac := string(payload)
 			for alienmac, _ := range VSwitch.SPlane {
 				AnnounceAlien(alienmac, string(sourcemac))
 
@@ -112,29 +120,33 @@ func AnnounceLocal(mac string) {
 	mac = strings.ToUpper(mac)
 
 	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
-	mykey := conf.GetConfigItem("SWITCHID")
+
 	log.Println("[PLANE][ANNOUNCELOCAL] Announcing  ", myannounce)
 
-	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
+	tlv := tools.CreateTLV("A", []byte(myannounce))
 
-	tlv := tools.CreateTLV("A", myannounce_enc)
+	tlv_enc := crypt.FrameEncrypt([]byte(VSwitch.SwID), tlv)
 
-	DispatchTLV(tlv, mac)
+	DispatchTLV(tlv_enc, mac)
 
 }
 
+// FIXME this is not correct : it should announce an alien on its address!!!
 func AnnounceAlien(alien_mac string, mac string) {
 
 	mac = strings.ToUpper(mac)
+	alien_mac = strings.ToUpper(alien_mac)
 
-	myannounce := strings.ToUpper(alien_mac) + "|" + VSwitch.Fqdn
-	mykey := conf.GetConfigItem("SWITCHID")
+	tmp_endpoint := VSwitch.SPlane[alien_mac].EndPoint
+	tmp_ethIP := VSwitch.SPlane[alien_mac].EthIP
 
-	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
+	myannounce := alien_mac + "|" + tmp_endpoint.String() + "|" + tmp_ethIP.String()
 
-	tlv := tools.CreateTLV("A", myannounce_enc)
+	tlv := tools.CreateTLV("A", []byte(myannounce))
 
-	DispatchTLV(tlv, mac)
+	tlv_enc := crypt.FrameEncrypt([]byte(VSwitch.SwID), tlv)
+
+	DispatchTLV(tlv_enc, mac)
 
 }
 
@@ -143,12 +155,11 @@ func SendQueryToMac(mac string) {
 	mac = strings.ToUpper(mac)
 
 	myannounce := VSwitch.HAddr
-	mykey := conf.GetConfigItem("SWITCHID")
 
-	myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
+	tlv := tools.CreateTLV("Q", []byte(myannounce))
 
-	tlv := tools.CreateTLV("Q", myannounce_enc)
+	tlv_enc := crypt.FrameEncrypt([]byte(VSwitch.SwID), tlv)
 
-	DispatchTLV(tlv, mac)
+	DispatchTLV(tlv_enc, mac)
 
 }

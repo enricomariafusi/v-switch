@@ -14,8 +14,8 @@ import (
 var letters = []rune("0123456789-+@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 type Tlv struct {
-	T       string // type of TLV
-	Payload []byte
+	T string // type of TLV
+	P []byte // payload
 }
 
 //RandSeq returns a random string
@@ -103,7 +103,7 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
 	}
 
-	return mytlv.T, len(mytlv.Payload), mytlv.Payload
+	return mytlv.T, len(mytlv.P), mytlv.P
 
 }
 

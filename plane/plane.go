@@ -9,9 +9,9 @@ import (
 )
 
 type Sport struct {
-	EndPoint net.UDPAddr
-	Socket   net.UDPConn
-	EthIP    net.IPAddr
+	EndPoint net.UDPAddr // IP:PORT of the remote peer
+	Socket   net.UDPConn // Connection to the remote peer
+	EthIP    net.IPAddr  // Ip on the interface of remote peer.
 }
 
 type vswitchplane struct {
