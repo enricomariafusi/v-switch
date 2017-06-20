@@ -52,7 +52,7 @@ func TapInterpreterThread() {
 
 		if tools.IsMacBcast(mymacaddr) {
 
-			for mac, _ := range VSwitch.Ports {
+			for mac, _ := range VSwitch.SPlane {
 
 				DispatchTLV(mytlv, strings.ToUpper(mac))
 			}

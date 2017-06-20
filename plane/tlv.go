@@ -36,13 +36,15 @@ func TLVInterpreter() {
 			announce := crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
 			fields := strings.Split(string(announce), "|")
 			if len(fields) == 3 {
-				VSwitch.addPort(fields[0], fields[1])
-				UDPCreateConn(fields[0], fields[1])
-				tools.AddARPentry(fields[0], fields[2], VSwitch.DevN)
+				radd, _ := net.ResolveUDPAddr("udp", fields[1])
+				rip, _ := net.ResolveIPAddr("ip", fields[2])
+				VSwitch.addPort(fields[0], *radd)
+				UDPCreateConn(fields[0], *radd)
+				VSwitch.addRemoteIp(fields[0], *rip)
 			}
 		case "Q":
 			sourcemac := crypt.FrameDecrypt([]byte(VSwitch.SwID), payload)
-			for alienmac, _ := range VSwitch.Ports {
+			for alienmac, _ := range VSwitch.SPlane {
 				AnnounceAlien(alienmac, string(sourcemac))
 
 			}
@@ -56,23 +58,11 @@ func TLVInterpreter() {
 
 }
 
-func UDPCreateConn(mac string, remote string) {
+func UDPCreateConn(mac string, remote net.UDPAddr) {
 
 	mac = strings.ToUpper(mac)
 
-	_, open_already := VSwitch.Conns[mac]
-
-	if open_already {
-		return
-	}
-
 	log.Println("[PLANE][TLV]: Creating port with: ", remote)
-
-	ServerAddr, err := net.ResolveUDPAddr("udp", remote)
-	if err != nil {
-		log.Println("[PLANE][TLV] Bad destination address ", remote, ":", err.Error())
-		return
-	}
 
 	LocalAddr, err := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
 	if err != nil {
@@ -80,15 +70,15 @@ func UDPCreateConn(mac string, remote string) {
 		return
 	}
 
-	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
+	Conn, err := net.DialUDP("udp", LocalAddr, &remote)
 
 	if err != nil {
-		log.Println("[PLANE][TLV] Error connecting with ", remote, ":", err.Error())
+		log.Println("[PLANE][TLV] Error connecting with ", remote.String(), ":", err.Error())
 		return
 	}
-	log.Println("[PLANE][TLV] Success connecting with ", remote)
+	log.Println("[PLANE][TLV] Success connecting with ", remote.String())
 
-	VSwitch.addConn(mac, Conn)
+	VSwitch.addConn(mac, *Conn)
 
 	AnnounceLocal(mac)
 
@@ -98,16 +88,16 @@ func DispatchTLV(mytlv []byte, mac string) {
 
 	mac = strings.ToUpper(mac)
 
-	_, open_already := VSwitch.Conns[mac]
-
 	if mac == VSwitch.HAddr {
 		log.Printf("[PLANE][TLV][DISPATCH] %s is myself : no need to dispatch", mac)
 		return
 	}
 
-	if open_already {
+	if VSwitch.macIsKnown(mac) {
 
-		VSwitch.Conns[mac].Write([]byte(mytlv))
+		osocket := VSwitch.SPlane[mac].Socket
+
+		osocket.Write([]byte(mytlv))
 		log.Printf("[PLANE][TLV][DISPATCH] Dispatching to %s", mac)
 
 	} else {
