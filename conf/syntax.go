@@ -21,9 +21,6 @@ func ConfCheck() {
 		"DEBUG",
 		"DEVICEADDR",
 		"DEVICEMASK",
-	}
-
-	OptionalItems := []string{
 		"PUBLIC",
 		"SEED",
 	}
@@ -100,18 +97,6 @@ func ConfCheck() {
 		SetConfigItem("SWITCHID", tools.RandSeq(Mtu))
 		fmt.Println("SWITCHID = ", GetConfigItem("SWITCHID"))
 		os.Exit(1)
-	}
-
-	for _, c_item := range OptionalItems {
-
-		saddr := GetConfigItem(c_item)
-
-		if _, err := net.ResolveUDPAddr("udp", saddr); err != nil {
-			log.Printf("[CONF][SYNTAX] %s is not a valid address for %s: %s", saddr, c_item, err.Error())
-			os.Exit(1)
-
-		}
-
 	}
 
 	if len(GetConfigItem("DEVICENAME")) > 9 {

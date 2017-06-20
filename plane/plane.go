@@ -20,11 +20,11 @@ type vswitchplane struct {
 	//Ports map[string]string
 	//Conns map[string]net.Conn
 	SPlane map[string]Sport
-	HAddr  string
-	Fqdn   string
-	IPAdd  string
-	SwID   string
-	DevN   string
+	HAddr  string // Hardware address of the local tap device
+	Fqdn   string // Public IP address if setup, or the local ip address
+	IPAdd  string // local ip address
+	SwID   string // deviceID
+	DevN   string //name of the tap device
 }
 
 //V-Switch will be exported to UDP and to TAP
@@ -38,7 +38,7 @@ func init() {
 
 	log.Printf("[PLANE][PLANE] PORTS: %b", len(VSwitch.SPlane))
 
-	if conf.ConfigItemExists("PUBLIC") {
+	if conf.GetConfigItem("PUBLIC") != "HOSTNAME" {
 		VSwitch.Fqdn = conf.GetConfigItem("PUBLIC")
 		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
 	} else {
@@ -68,105 +68,59 @@ func (sw *vswitchplane) RemoveMAC(mac string) {
 	hwaddr := strings.ToUpper(mac)
 
 	if sw.macIsKnown(hwaddr) {
-		log.Printf("[PLANE][PORT][DELETE] [ %s ] Deleted from plane", hwaddr)
+
+		old_socket := sw.SPlane[hwaddr].Socket
+		err := old_socket.Close()
+		log.Printf("[PLANE][CONN][CLOSE] [ %t ] UDP Connection closed", err == nil)
 		delete(sw.SPlane, hwaddr)
+		log.Printf("[PLANE][PORT][DELETE] [ %s ] Deleted from plane", hwaddr)
 	} else {
 		log.Printf("[PLANE][PORT][DELETE] [ %s ] Non existing, cannot delete from plane", hwaddr)
 	}
 
 }
 
-//Adds a new port into the plane
-func (sw *vswitchplane) addPort(mac string, endpoint net.UDPAddr) {
+func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 
-	hwaddr := strings.ToUpper(mac)
+	mac = strings.ToUpper(mac)
 
-	_, err := net.ParseMAC(hwaddr)
+	_, err := net.ParseMAC(mac)
 	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
+		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid MAC address: %s", mac, err.Error())
 		return
 	}
 
-	if hwaddr == sw.HAddr {
-		log.Printf("[PLANE][PORT][NOOP] [ %s ] = %s : no need to add", hwaddr, sw.HAddr)
+	endpoint_net, errb := net.ResolveUDPAddr("udp", endpoint)
+	if errb != nil {
+		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid UDP address: %s", endpoint, err.Error())
 		return
 	}
 
-	var port Sport
-
-	if sw.macIsKnown(hwaddr) {
-		port.Socket = sw.SPlane[hwaddr].Socket
-		port.EthIP = sw.SPlane[hwaddr].EthIP
-		sw.RemoveMAC(hwaddr)
-	}
-
-	port.EndPoint = endpoint
-	sw.SPlane[hwaddr] = port
-	log.Printf("[PLANE][PORT][ANN] Updated port : MAC %s -> %s ", hwaddr, endpoint.String())
-
-}
-
-//Adds a new remoteip into the plane
-func (sw *vswitchplane) addRemoteIp(mac string, remoteip net.IPAddr) {
-
-	hwaddr := strings.ToUpper(mac)
-
-	_, err := net.ParseMAC(hwaddr)
-	if err != nil {
-		log.Printf("[PLANE][PORT][ERROR] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
+	remoteip_net, errc := net.ResolveIPAddr("ip", remoteip)
+	if errc != nil {
+		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid IP address: %s", remoteip, err.Error())
 		return
 	}
-
-	if hwaddr == sw.HAddr {
-		log.Printf("[PLANE][PORT][NOOP] [ %s ] = %s : no need to add", hwaddr, sw.HAddr)
-		return
-	}
-
-	var port Sport
-
-	if sw.macIsKnown(hwaddr) {
-		port.Socket = sw.SPlane[hwaddr].Socket
-		port.EndPoint = sw.SPlane[hwaddr].EndPoint
-		sw.RemoveMAC(hwaddr)
-	}
-
-	port.EthIP = remoteip
-	sw.SPlane[hwaddr] = port
-	log.Printf("[PLANE][REMOTEIP][ANN] Updated port : MAC %s -> %s ", hwaddr, remoteip.String())
-	tools.AddARPentry(hwaddr, remoteip.String(), sw.DevN)
-
-}
-
-//Adds a new conn into the plane
-func (sw *vswitchplane) addConn(mac string, conn net.UDPConn) {
-
-	hwaddr := strings.ToUpper(mac)
-
-	_, err := net.ParseMAC(hwaddr)
-	if err != nil {
-		log.Printf("[PLANE][CONN][ERROR] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
-		return
-	}
-
-	if mac == sw.HAddr {
-		log.Printf("[PLANE][PORT][NOOP] %s = %s : no need to add", hwaddr, sw.HAddr)
-		return
-	}
-
-	var port Sport
 
 	if sw.macIsKnown(mac) {
-		port.EndPoint = sw.SPlane[hwaddr].EndPoint
-		port.EthIP = sw.SPlane[hwaddr].EthIP
-
-		old_socket := sw.SPlane[hwaddr].Socket
-		old_socket.Close()
-		sw.RemoveMAC(hwaddr)
+		sw.RemoveMAC(mac)
 	}
 
-	port.Socket = conn
-	sw.SPlane[hwaddr] = port
-	log.Printf("[PLANE][SOCKET][ANN] Updated Connection : MAC %s -> %s ", hwaddr, conn.RemoteAddr().Network())
+	var port Sport
+
+	port.EndPoint = *endpoint_net
+	port.EthIP = *remoteip_net
+	netsocket, neterr := net.DialUDP("udp", nil, endpoint_net)
+	if neterr != nil {
+		log.Println("[PLANE][PLANE][ADD] Error connecting with [", endpoint, "]:", neterr.Error())
+		return
+	} else {
+		port.Socket = *netsocket
+	}
+
+	sw.SPlane[mac] = port
+
+	tools.AddARPentry(mac, remoteip, VSwitch.DevN)
 
 }
 

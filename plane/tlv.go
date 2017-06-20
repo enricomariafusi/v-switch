@@ -4,7 +4,6 @@ import (
 	"V-switch/crypt"
 	"V-switch/tools"
 	"log"
-	"net"
 	"strings"
 )
 
@@ -44,11 +43,7 @@ func TLVInterpreter() {
 			announce := string(payload)
 			fields := strings.Split(announce, "|")
 			if len(fields) == 3 {
-				radd, _ := net.ResolveUDPAddr("udp", fields[1])
-				rip, _ := net.ResolveIPAddr("ip", fields[2])
-				VSwitch.addPort(fields[0], *radd)
-				UDPCreateConn(fields[0], *radd)
-				VSwitch.addRemoteIp(fields[0], *rip)
+				VSwitch.AddMac(fields[0], fields[1], fields[2])
 			}
 		case "Q":
 			sourcemac := string(payload)
@@ -66,50 +61,22 @@ func TLVInterpreter() {
 
 }
 
-func UDPCreateConn(mac string, remote net.UDPAddr) {
-
-	mac = strings.ToUpper(mac)
-
-	log.Println("[PLANE][TLV]: Creating port with: ", remote)
-
-	LocalAddr, err := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
-	if err != nil {
-		log.Println("[PLANE][TLV] Cannot find local port to bind ", remote, ":", err.Error())
-		return
-	}
-
-	Conn, err := net.DialUDP("udp", LocalAddr, &remote)
-
-	if err != nil {
-		log.Println("[PLANE][TLV] Error connecting with ", remote.String(), ":", err.Error())
-		return
-	}
-	log.Println("[PLANE][TLV] Success connecting with ", remote.String())
-
-	VSwitch.addConn(mac, *Conn)
-
-	AnnounceLocal(mac)
-
-}
-
 func DispatchTLV(mytlv []byte, mac string) {
 
 	mac = strings.ToUpper(mac)
 
-	if mac == VSwitch.HAddr {
-		log.Printf("[PLANE][TLV][DISPATCH] %s is myself : no need to dispatch", mac)
-		return
-	}
-
 	if VSwitch.macIsKnown(mac) {
 
 		osocket := VSwitch.SPlane[mac].Socket
-
-		osocket.Write([]byte(mytlv))
-		log.Printf("[PLANE][TLV][DISPATCH] Dispatching to %s", mac)
+		log.Printf("[PLANE][TLV][DISPATCH] Dispatching to %s (%s)", mac, osocket.RemoteAddr().String())
+		_, err := osocket.Write([]byte(mytlv))
+		if err != nil {
+			log.Println("[PLANE][TLV][DISPATCH] cannot dispatch: ", err.Error())
+		}
 
 	} else {
-		log.Println("[PLANE][TLV][DISPATCH] cannot dispatch, no connection available for ", mac)
+		log.Println("[PLANE][TLV][DISPATCH] cannot dispatch, unknown MAC ", mac)
+
 		return
 	}
 
@@ -141,6 +108,8 @@ func AnnounceAlien(alien_mac string, mac string) {
 	tmp_ethIP := VSwitch.SPlane[alien_mac].EthIP
 
 	myannounce := alien_mac + "|" + tmp_endpoint.String() + "|" + tmp_ethIP.String()
+
+	log.Println("[PLANE][ANNOUNCEALIEN] Announcing  ", myannounce)
 
 	tlv := tools.CreateTLV("A", []byte(myannounce))
 

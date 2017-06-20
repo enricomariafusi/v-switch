@@ -2,8 +2,6 @@ package plane
 
 import (
 	"V-switch/conf"
-	"V-switch/crypt"
-	"V-switch/tools"
 	"log"
 	"net"
 	"strconv"
@@ -30,68 +28,36 @@ func init() {
 
 func SeedingTask(remote string) {
 
-	log.Println("[PLANE][PLUG]: Creating conn with SEED: ", remote)
+	cycle, _ := strconv.Atoi(conf.GetConfigItem("TTL"))
 
-	ServerAddr, err := net.ResolveUDPAddr("udp", remote)
-	if err != nil {
-		log.Println("[PLANE][PLUG] Bad destination address ", remote, ":", err.Error())
-		return
+	var e error = nil
+
+	for e == nil {
+		_, e = net.ParseMAC(VSwitch.HAddr)
+		log.Println("[PLANE][PLUG] Waiting 10 seconds the MAC is there")
+		time.Sleep(10 * time.Second)
+
 	}
 
-	LocalAddr, err := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
-	if err != nil {
-		log.Println("[PLANE][PLUG] Cannot find local port to bind ", remote, ":", err.Error())
-		return
-	}
+	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
-	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
+	VSwitch.AddMac(VSwitch.HAddr, remote, VSwitch.IPAdd)
 
-	if err != nil {
-		log.Println("[PLANE][PLUG] Error connecting with [", remote, "]:", err.Error())
-		return
-	}
-	log.Println("[PLANE][PLUG] Success connecting with ", remote)
-	mykey := conf.GetConfigItem("SWITCHID")
+	AnnounceAlien(VSwitch.HAddr, VSwitch.HAddr)
+
+	VSwitch.RemoveMAC(VSwitch.HAddr)
 
 	for {
 
-		_, e := net.ParseMAC(VSwitch.HAddr)
+		// announces everybody to everybody
+		for alienmac, _ := range VSwitch.SPlane {
+			for destmac, _ := range VSwitch.SPlane {
+				if alienmac != destmac {
+					AnnounceAlien(alienmac, destmac)
+				}
+			}
 
-		if e != nil {
-			log.Println("[PLANE][PLUG] Waiting 10 seconds the MAC is there")
-			time.Sleep(10 * time.Second)
-			continue
-		} else {
-			log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 		}
-
-		// first, sends the announce
-
-		myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
-
-		myannounce_enc := crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
-
-		tlv := tools.CreateTLV("A", myannounce_enc)
-
-		_, err := Conn.Write(tlv)
-		if err != nil {
-			log.Printf("[PLANE][PLUG] Cannot announce to %s : %s", myannounce, err.Error())
-		}
-
-		// then sends query
-
-		myannounce = VSwitch.HAddr
-
-		myannounce_enc = crypt.FrameEncrypt([]byte(mykey), []byte(myannounce))
-
-		tlv = tools.CreateTLV("Q", myannounce_enc)
-
-		_, err = Conn.Write(tlv)
-		if err != nil {
-			log.Printf("[PLANE][PLUG] Cannot query to %s: %s", remote, err.Error())
-		}
-
-		cycle, _ := strconv.Atoi(conf.GetConfigItem("TTL"))
 
 		time.Sleep(time.Duration(cycle) * time.Second)
 
