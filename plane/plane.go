@@ -42,7 +42,7 @@ func init() {
 		VSwitch.Fqdn = conf.GetConfigItem("PUBLIC")
 		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
 	} else {
-		VSwitch.Fqdn = tools.GetFQDN() + ":" + conf.GetConfigItem("PORT")
+		VSwitch.Fqdn = tools.GetLocalIp() + ":" + conf.GetConfigItem("PORT")
 		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
 	}
 

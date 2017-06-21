@@ -70,13 +70,14 @@ func DispatchTLV(mytlv []byte, mac string) {
 		osocket := VSwitch.SPlane[mac].Socket
 
 		_, err := osocket.Write([]byte(mytlv))
-		log.Printf("[PLANE][TLV][DISPATCH] Dispatched %d BYTES to %s (%s): %t", len(mytlv), mac, osocket.RemoteAddr().String(), err == nil)
+		log.Printf("[PLANE][TLV][DISPATCH] Sent %d BYTES to %s [%s]: %t", len(mytlv), mac, osocket.RemoteAddr().String(), err == nil)
 		if err != nil {
-			log.Println("[PLANE][TLV][DISPATCH] cannot dispatch: ", err.Error())
+			log.Printf("[PLANE][TLV][DISPATCH] cannot dispatch for MAC %s at [%s] : ", mac, osocket.RemoteAddr(), err.Error())
+			VSwitch.RemoveMAC(mac)
 		}
 
 	} else {
-		log.Println("[PLANE][TLV][DISPATCH] cannot dispatch, unknown MAC ", mac)
+		log.Println("[PLANE][TLV][DISPATCH] Unknown MAC: ", mac)
 
 		return
 	}
@@ -89,7 +90,7 @@ func AnnounceLocal(mac string) {
 
 	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
 
-	log.Println("[PLANE][ANNOUNCELOCAL] Announcing  ", myannounce)
+	log.Printf("[PLANE][ANNOUNCELOCAL] Announcing [%s] ", myannounce)
 
 	tlv := tools.CreateTLV("A", []byte(myannounce))
 
@@ -110,7 +111,7 @@ func AnnounceAlien(alien_mac string, mac string) {
 
 	myannounce := alien_mac + "|" + tmp_endpoint.String() + "|" + tmp_ethIP.String()
 
-	log.Println("[PLANE][ANNOUNCEALIEN] Announcing  ", myannounce)
+	log.Printf("[PLANE][ANNOUNCEALIEN] Announcing [%s] ", myannounce)
 
 	tlv := tools.CreateTLV("A", []byte(myannounce))
 

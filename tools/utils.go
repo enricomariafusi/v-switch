@@ -6,7 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"os"
+
 	"strings"
 	"time"
 )
@@ -30,8 +30,8 @@ func RandSeq(n int) string {
 
 //GetLocalIp returns back the IP of the interface hosting the default route
 func GetLocalIp() string {
-
-	conn, err := net.Dial("udp", "255.255.255.255:80")
+	// testing with  198.18.0.0/15 , see https://tools.ietf.org/html/rfc2544
+	conn, err := net.Dial("udp", "198.18.0.30:80")
 	if err != nil {
 		log.Printf("[TOOLS][UTILS][OS] : cannot use UDP")
 		return "127.0.0.1" // wanted to use 0.0.0.0 but golang didn't get this
@@ -98,7 +98,7 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 	mybuffer.Write(n_tlv)
 	err := decoder.Decode(&mytlv)
 	if err != nil {
-		log.Println("[TOOLS][UTILS][TLV] Error recoding TLV")
+		log.Println("[TOOLS][UTILS][TLV] Error recoding TLV:", err.Error())
 		return "", 0, nil
 
 	}
@@ -108,15 +108,15 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 }
 
 func GetFQDN() string {
-	hostname, err := os.Hostname()
+
+	myIP := GetLocalIp()
+
+	names, err := net.LookupAddr(myIP)
 	if err != nil {
+		log.Println("[TOOLS][UTILS][FQDN] Error getting my hostname:", err.Error())
 		return "localhost"
 	}
 
-	host := AddrResolve(hostname)
-	if host == "127.0.0.1" {
-		return "localhost"
-	}
+	return names[0]
 
-	return hostname
 }

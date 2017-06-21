@@ -34,8 +34,8 @@ func SeedingTask(remote string) {
 
 	for e == nil {
 		_, e = net.ParseMAC(VSwitch.HAddr)
-		log.Println("[PLANE][PLUG] Waiting 10 seconds the MAC is there")
-		time.Sleep(10 * time.Second)
+		log.Println("[PLANE][PLUG] Waiting 3 seconds the MAC is there")
+		time.Sleep(3 * time.Second)
 
 	}
 
@@ -44,6 +44,7 @@ func SeedingTask(remote string) {
 	VSwitch.AddMac(VSwitch.HAddr, remote, VSwitch.IPAdd)
 
 	AnnounceAlien(VSwitch.HAddr, VSwitch.HAddr)
+	SendQueryToMac(VSwitch.HAddr)
 
 	VSwitch.RemoveMAC(VSwitch.HAddr)
 
