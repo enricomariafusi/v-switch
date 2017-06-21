@@ -90,7 +90,7 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 		return
 	}
 
-	if (VSwitch.HAddr == mac) && (VSwitch.Fqdn == endpoint) {
+	if VSwitch.HAddr == mac {
 		log.Printf("[PLANE][PORT][ADD] [ %s -> %s ] This is ourself, not adding", mac, endpoint)
 		return
 	}
