@@ -4,6 +4,7 @@ import (
 	"V-switch/crypt"
 	"V-switch/tools"
 	"log"
+	"net"
 	"strings"
 )
 
@@ -79,6 +80,47 @@ func DispatchTLV(mytlv []byte, mac string) {
 	} else {
 		log.Println("[PLANE][TLV][DISPATCH] Unknown MAC: ", mac)
 
+		return
+	}
+
+}
+
+func CustomDispatch(mytlv []byte, remote string) {
+
+	var neterr error
+	var LocalAddr, RemoteAddr *net.UDPAddr
+	var netsocket *net.UDPConn
+	var n int
+
+	LocalAddr, neterr = net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
+	if neterr != nil {
+		log.Println("[PLANE][TLV][CustomDispatch] Error getting our IP :", neterr.Error())
+		return
+	}
+
+	RemoteAddr, neterr = net.ResolveUDPAddr("udp", remote)
+	if neterr != nil {
+		log.Println("[PLANE][TLV][CustomDispatch] Remote address invalid :", neterr.Error())
+		return
+	}
+
+	netsocket, neterr = net.DialUDP("udp", LocalAddr, RemoteAddr)
+	if neterr != nil {
+		log.Println("[PLANE][TLV][CustomDispatch] Error connecting with [", remote, "]:", neterr.Error())
+		return
+	}
+
+	n, neterr = netsocket.Write(mytlv)
+	if neterr != nil {
+		log.Println("[PLANE][TLV][CustomDispatch] Error Writing to [", remote, "]:", neterr.Error())
+		return
+	} else {
+		log.Printf("[PLANE][TLV][CustomDispatch] Written %d BYTES to %s : %t", n, remote, neterr == nil)
+	}
+
+	neterr = netsocket.Close()
+	if neterr != nil {
+		log.Println("[PLANE][TLV][CustomDispatch] Error closing socket : ", neterr.Error())
 		return
 	}
 

@@ -30,10 +30,10 @@ func RandSeq(n int) string {
 
 //GetLocalIp returns back the IP of the interface hosting the default route
 func GetLocalIp() string {
-	// testing with  198.18.0.0/15 , see https://tools.ietf.org/html/rfc2544
+	// testing with  198.18.0.0/15 , see https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml
 	conn, err := net.Dial("udp", "198.18.0.30:80")
 	if err != nil {
-		log.Printf("[TOOLS][UTILS][OS] : cannot use UDP")
+		log.Printf("[TOOLS][UTILS][OS] : cannot use UDP: %s", err.Error())
 		return "127.0.0.1" // wanted to use 0.0.0.0 but golang didn't get this
 	}
 	conn.Close()
