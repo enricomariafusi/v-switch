@@ -18,3 +18,4 @@ Ready for testing (it works with 2 nodes) TODO:
 2. CONFIGURATION GUIDE
 3. LINT code.
 
+Now beta2....
