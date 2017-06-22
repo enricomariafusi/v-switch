@@ -29,11 +29,14 @@ func TLVInterpreter() {
 		if my_tlv == nil {
 			log.Printf("[PLANE][TLV][ERROR] Invalid KEY(%d): %s", len(VSwitch.SwID), VSwitch.SwID)
 			continue
+		} else {
+			log.Printf("[PLANE][TLV][INTERPRETER] Decrypted GOB %d BYTES long", len(my_tlv))
 		}
 
 		typ, ln, payload := tools.UnPackTLV(my_tlv)
 
 		if ln == 0 {
+			log.Printf("[PLANE][TLV][ERROR] Payload was empty, nothing to do")
 			continue
 		}
 
