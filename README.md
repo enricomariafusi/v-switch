@@ -9,7 +9,9 @@ each others on layer 2. Adding a new machine to the switch will advertise each o
 
 Encryption is using AES256 + the GPG container, meaning the key MUST be as long as the MTU. This makes the flow relatively safe.
 
-V-Switch will take care to self-configure the interface and to keep the ARP table updated on your kernel using the linux netlink interface (ip).
+V-Switch will take care to self-configure the interface and to keep the ARP table updated on your kernel using the linux netlink interface (ip). 
+
+If your NAT router supports NAT HolePunch, now each node will behave as a STUN server, then it should work seamlessly.
 
 Ready for testing (it works with 2 nodes) TODO:
 
