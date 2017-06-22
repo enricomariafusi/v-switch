@@ -49,6 +49,8 @@ func FrameDecrypt(key []byte, text2decrypt []byte) []byte {
 		return nil
 	}
 
+	log.Printf("[CRYPT][PGP] Decryption successful")
+
 	return plaintext
 }
 
