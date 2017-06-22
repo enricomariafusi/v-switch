@@ -33,6 +33,8 @@ func FrameDecrypt(key []byte, text2decrypt []byte) []byte {
 
 	encrypted := bytes.NewReader(text2decrypt)
 
+	log.Printf("[CRYPT][PGP] Start decrypting %d long payload", len(text2decrypt))
+
 	cleartext_md, err := openpgp.ReadMessage(encrypted, nil, func(keys []openpgp.Key, symmetric bool) ([]byte, error) {
 		return key, nil
 	}, &GpGconfig)
