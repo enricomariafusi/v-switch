@@ -61,11 +61,11 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 
 	log.Println("[UDP][SERVER] Reading thread started")
 
-	tmp_MTU, _ := strconv.Atoi(conf.GetConfigItem("MTU")) // encryption of MTU max size
+	readbuffer, _ := strconv.Atoi(conf.GetConfigItem("MTU")) // at least the  MTU max size
 
 	defer ServerConn.Close()
 
-	buf := make([]byte, 2*tmp_MTU) // enough for the payload , even if encrypted ang gob encoded
+	buf := make([]byte, 3*readbuffer) // enough for the payload , even if encrypted ang gob encoded
 	log.Println("[UDP][SERVER] Read MTU set to ", tmp_MTU)
 
 	for {
