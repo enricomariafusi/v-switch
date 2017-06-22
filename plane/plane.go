@@ -121,6 +121,8 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 
 	var port Sport
 
+	log.Printf("[PLANE][PORT][ADD] Adding %s|%s|%s ", mac, endpoint, remoteip)
+
 	port.EndPoint = p_endpoint
 	port.EthIP = p_remoteip
 

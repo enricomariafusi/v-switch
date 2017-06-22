@@ -31,6 +31,7 @@ func init() {
 func SeedingTask(remote string) {
 
 	cycle, _ := strconv.Atoi(conf.GetConfigItem("TTL"))
+	log.Println("[PLANE][PLUG] TTL is:", cycle)
 
 	var e error = nil
 

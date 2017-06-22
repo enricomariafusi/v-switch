@@ -37,6 +37,8 @@ func TLVInterpreter() {
 			continue
 		}
 
+		log.Println("[PLANE][TLV][INTERPRETER] Received valid payload, type [", typ, "]")
+
 		switch typ {
 
 		// it is a frame
@@ -52,8 +54,8 @@ func TLVInterpreter() {
 		case "Q":
 			sourcemac := string(payload)
 			for alienmac, _ := range VSwitch.SPlane {
-				AnnounceAlien(alienmac, string(sourcemac))
 
+				AnnounceAlien(alienmac, sourcemac)
 			}
 
 		default:
@@ -142,9 +144,11 @@ func SendQueryToMac(mac string) {
 
 	myannounce := VSwitch.HAddr
 
-	tlv := tools.CreateTLV("Q", []byte(myannounce))
+	tlv := tools.CreateTLV("Q", []byte(VSwitch.HAddr))
 
 	tlv_enc := crypt.FrameEncrypt([]byte(VSwitch.SwID), tlv)
+
+	log.Printf("[PLANE][ANNOUNCEALIEN] Querying %s with our mac %s ", mac, myannounce)
 
 	DispatchTLV(tlv_enc, mac)
 
