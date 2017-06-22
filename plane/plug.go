@@ -59,8 +59,9 @@ func SeedingTask(remote string) {
 
 	for {
 
-		// announces everybody to everybody
+		// announces everybody + self to everybody
 		for alienmac, _ := range VSwitch.SPlane {
+			AnnounceLocal(alienmac)
 			for destmac, _ := range VSwitch.SPlane {
 				if alienmac != destmac {
 					AnnounceAlien(alienmac, destmac)

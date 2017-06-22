@@ -70,6 +70,7 @@ func (sw *vswitchplane) RemoveMAC(mac string) {
 	if sw.macIsKnown(hwaddr) {
 
 		delete(sw.SPlane, hwaddr)
+		tools.DelARPentry(hwaddr, VSwitch.DevN)
 		log.Printf("[PLANE][PORT][DELETE] [ %s ] Deleted from plane", hwaddr)
 	} else {
 		log.Printf("[PLANE][PORT][DELETE] [ %s ] Non existing, cannot delete from plane", hwaddr)
@@ -120,11 +121,7 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 
 	sw.SPlane[mac] = port
 
-	if mac != VSwitch.HAddr {
-
-		tools.AddARPentry(mac, remoteip, VSwitch.DevN)
-
-	}
+	tools.AddARPentry(mac, remoteip, VSwitch.DevN)
 
 }
 

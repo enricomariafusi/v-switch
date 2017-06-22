@@ -13,12 +13,12 @@ func AddARPentry(mac string, ip string, dev string) {
 
 	_, err := net.ParseMAC(hwaddr)
 	if err != nil {
-		log.Printf("[TOOLS][ARP] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
+		log.Printf("[TOOLS][ARP][ADD] [ %s ] is not a valid MAC address: %s", hwaddr, err.Error())
 		return
 	}
 
 	if net.ParseIP(ip) == nil {
-		log.Printf("[TOOLS][ARP] [ %s ] is not a valid IP address: %s", ip, err.Error())
+		log.Printf("[TOOLS][ARP][ADD] [ %s ] is not a valid IP address: %s", ip, err.Error())
 		return
 	}
 
@@ -29,9 +29,30 @@ func AddARPentry(mac string, ip string, dev string) {
 	err = arpcmd.Run()
 
 	if err != nil {
-		log.Printf("[TOOLS][ARP] After executing  %q : %s", arpcmd.Args, err.Error())
+		log.Printf("[TOOLS][ARP][ADD] After executing  %q : %s", arpcmd.Args, err.Error())
 	} else {
-		log.Printf("[TOOLS][ARP] Executed   %q", arpcmd.Args)
+		log.Printf("[TOOLS][ARP][ADD] Executed   %q", arpcmd.Args)
+	}
+
+}
+
+func DelARPentry(ip string, dev string) {
+
+	if net.ParseIP(ip) == nil {
+		log.Printf("[TOOLS][ARP][DEL] [ %s ] is not a valid IP address", ip)
+		return
+	}
+
+	// ip  neigh del 3000::a0a:a3a dev eth1
+
+	arpcmd := exec.Command("ip", "neigh", "del", ip, "dev", dev, "nud", "noarp")
+
+	err := arpcmd.Run()
+
+	if err != nil {
+		log.Printf("[TOOLS][ARP][DEL] After executing  %q : %s", arpcmd.Args, err.Error())
+	} else {
+		log.Printf("[TOOLS][ARP][DEL] Executed   %q", arpcmd.Args)
 	}
 
 }
