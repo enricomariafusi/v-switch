@@ -50,7 +50,7 @@ func ConfCheck() {
 		os.Exit(1)
 	} else {
 
-		if (port > 65534) || (port < 10) {
+		if (port > 65534) || (port < 1024) {
 			log.Println("[CONF][SYNTAX] Unacceptable value of PORT ", GetConfigItem("PORT"))
 			os.Exit(1)
 		}

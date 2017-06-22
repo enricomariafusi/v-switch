@@ -34,7 +34,7 @@ func GetLocalIp() string {
 	conn, err := net.Dial("udp", "198.18.0.30:80")
 	if err != nil {
 		log.Printf("[TOOLS][UTILS][OS] : cannot use UDP: %s", err.Error())
-		return "127.0.0.1" // wanted to use 0.0.0.0 but golang didn't get this
+		return "127.0.0.1" // wanted to use 0.0.0.0 but golang cannot make use of it
 	}
 	conn.Close()
 	torn := strings.Split(conn.LocalAddr().String(), ":")

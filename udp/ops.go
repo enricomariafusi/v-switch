@@ -12,12 +12,6 @@ import (
 
 func init() {
 
-	myport := conf.GetConfigItem("PORT")
-
-	if len(myport) < 2 {
-		conf.SetConfigItem("PORT", "22000")
-	}
-
 	plane.VSwitch.Server = UdpCreateServer(conf.GetConfigItem("PORT"))
 	go UDPReadMessage(plane.VSwitch.Server)
 
@@ -52,7 +46,7 @@ func UdpCreateServer(port string) *net.UDPConn {
 		os.Exit(1)
 	}
 
-	log.Println("[UDP][SERVER] Now listening at port ", port)
+	log.Println("[UDP][SERVER] Now listening at:  ", ServerConn.LocalAddr().String())
 	return ServerConn
 
 }
@@ -66,7 +60,7 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 	defer ServerConn.Close()
 
 	buf := make([]byte, 3*readbuffer) // enough for the payload , even if encrypted ang gob encoded
-	log.Println("[UDP][SERVER] Read MTU set to ", tmp_MTU)
+	log.Println("[UDP][SERVER] Read MTU set to ", 3*readbuffer)
 
 	for {
 
