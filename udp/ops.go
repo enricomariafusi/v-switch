@@ -18,8 +18,8 @@ func init() {
 		conf.SetConfigItem("PORT", "22000")
 	}
 
-	myconn := UdpCreateServer(conf.GetConfigItem("PORT"))
-	go UDPReadMessage(myconn)
+	plane.VSwitch.Server = UdpCreateServer(conf.GetConfigItem("PORT"))
+	go UDPReadMessage(plane.VSwitch.Server)
 
 }
 
@@ -43,6 +43,10 @@ func UdpCreateServer(port string) *net.UDPConn {
 	/* Now listen at selected port */
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 
+	// Setting the read buffer to avoid congestion
+
+	ServerConn.SetReadBuffer(4194304)
+
 	if err != nil {
 		log.Println("[UDP][SERVER] Error listening at port ", port, ":", err.Error())
 		os.Exit(1)
@@ -59,14 +63,13 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 
 	tmp_MTU, _ := strconv.Atoi(conf.GetConfigItem("MTU")) // encryption of MTU max size
 
-	tmp_MTU = 2 * tmp_MTU // how much is the max payload by the base64 encoding overhead plus TLV
-
 	defer ServerConn.Close()
 
-	buf := make([]byte, tmp_MTU) // enough for the payload , even if encrypted ang gob encoded
+	buf := make([]byte, 2*tmp_MTU) // enough for the payload , even if encrypted ang gob encoded
 	log.Println("[UDP][SERVER] Read MTU set to ", tmp_MTU)
 
 	for {
+
 		n, addr, err := ServerConn.ReadFromUDP(buf)
 		log.Println("[UDP][SERVER] Received ", n, "bytes from ", addr.String()) // just for debug
 

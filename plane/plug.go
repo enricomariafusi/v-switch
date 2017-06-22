@@ -42,9 +42,10 @@ func SeedingTask(remote string) {
 
 	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
-	tmp_tlv := tools.CreateTLV("A", []byte(VSwitch.HAddr+"|"+VSwitch.Fqdn+"|"+VSwitch.IPAdd))
+	tmp_announce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
+	tmp_tlv := tools.CreateTLV("A", []byte(tmp_announce))
 	CustomDispatch(tmp_tlv, remote)
-	log.Printf("[PLANE][PLUG][ANNOUNCE] Sent announce of %s to %s", VSwitch.HAddr, remote)
+	log.Printf("[PLANE][PLUG][ANNOUNCE] Sent announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmp_announce)
 	tmp_tlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
 	CustomDispatch(tmp_tlv, remote)
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)

@@ -68,12 +68,12 @@ func DispatchTLV(mytlv []byte, mac string) {
 
 	if VSwitch.macIsKnown(mac) {
 
-		osocket := VSwitch.SPlane[mac].Socket
+		oaddr := VSwitch.SPlane[mac].EndPoint
 
-		_, err := osocket.Write([]byte(mytlv))
-		log.Printf("[PLANE][TLV][DISPATCH] Sent %d BYTES to %s [%s]: %t", len(mytlv), mac, osocket.RemoteAddr().String(), err == nil)
+		n, err := VSwitch.Server.WriteToUDP(mytlv, oaddr) // we use the server IP and port as origin.
+		log.Printf("[PLANE][TLV][DISPATCH] Sent %d BYTES to %s [%s]: %t", n, mac, oaddr, err == nil)
 		if err != nil {
-			log.Printf("[PLANE][TLV][DISPATCH] cannot dispatch for MAC %s at [%s] : ", mac, osocket.RemoteAddr(), err.Error())
+			log.Printf("[PLANE][TLV][DISPATCH] cannot dispatch for MAC %s at [%s] : ", mac, oaddr, err.Error())
 			VSwitch.RemoveMAC(mac)
 		}
 
@@ -88,15 +88,9 @@ func DispatchTLV(mytlv []byte, mac string) {
 func CustomDispatch(mytlv []byte, remote string) {
 
 	var neterr error
-	var LocalAddr, RemoteAddr *net.UDPAddr
-	var netsocket *net.UDPConn
-	var n int
+	var RemoteAddr *net.UDPAddr
 
-	LocalAddr, neterr = net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
-	if neterr != nil {
-		log.Println("[PLANE][TLV][CustomDispatch] Error getting our IP :", neterr.Error())
-		return
-	}
+	var n int
 
 	RemoteAddr, neterr = net.ResolveUDPAddr("udp", remote)
 	if neterr != nil {
@@ -104,24 +98,12 @@ func CustomDispatch(mytlv []byte, remote string) {
 		return
 	}
 
-	netsocket, neterr = net.DialUDP("udp", LocalAddr, RemoteAddr)
-	if neterr != nil {
-		log.Println("[PLANE][TLV][CustomDispatch] Error connecting with [", remote, "]:", neterr.Error())
-		return
-	}
-
-	n, neterr = netsocket.Write(mytlv)
+	n, neterr = VSwitch.Server.WriteToUDP(mytlv, RemoteAddr) // we use the server IP and port as origin.
 	if neterr != nil {
 		log.Println("[PLANE][TLV][CustomDispatch] Error Writing to [", remote, "]:", neterr.Error())
 		return
 	} else {
-		log.Printf("[PLANE][TLV][CustomDispatch] Written %d BYTES to %s : %t", n, remote, neterr == nil)
-	}
-
-	neterr = netsocket.Close()
-	if neterr != nil {
-		log.Println("[PLANE][TLV][CustomDispatch] Error closing socket : ", neterr.Error())
-		return
+		log.Printf("[PLANE][TLV][CustomDispatch] Written %d BYTES of %d to %s : %t", n, len(mytlv), remote, neterr == nil)
 	}
 
 }

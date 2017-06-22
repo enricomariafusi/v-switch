@@ -10,7 +10,6 @@ import (
 
 type Sport struct {
 	EndPoint *net.UDPAddr // IP:PORT of the remote peer
-	Socket   *net.UDPConn // Connection to the remote peer
 	EthIP    *net.IPAddr  // Ip on the interface of remote peer.
 }
 
@@ -25,6 +24,7 @@ type vswitchplane struct {
 	IPAdd  string // local ip address
 	SwID   string // deviceID
 	DevN   string //name of the tap device
+	Server *net.UDPConn
 }
 
 //V-Switch will be exported to UDP and to TAP
@@ -69,9 +69,6 @@ func (sw *vswitchplane) RemoveMAC(mac string) {
 
 	if sw.macIsKnown(hwaddr) {
 
-		old_socket := sw.SPlane[hwaddr].Socket
-		err := old_socket.Close()
-		log.Printf("[PLANE][CONN][CLOSE] [ %t ] UDP Connection closed", err == nil)
 		delete(sw.SPlane, hwaddr)
 		log.Printf("[PLANE][PORT][DELETE] [ %s ] Deleted from plane", hwaddr)
 	} else {
@@ -95,14 +92,14 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 		return
 	}
 
-	endpoint_net, errb := net.ResolveUDPAddr("udp", endpoint)
-	if errb != nil {
+	_, err = net.ResolveUDPAddr("udp", endpoint)
+	if err != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid UDP address: %s", endpoint, err.Error())
 		return
 	}
 
-	remoteip_net, errc := net.ResolveIPAddr("ip", remoteip)
-	if errc != nil {
+	_, err = net.ResolveIPAddr("ip", remoteip)
+	if err != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid IP address: %s", remoteip, err.Error())
 		return
 	}
@@ -120,19 +117,6 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 	}
 
 	var port Sport
-
-	port.EndPoint = endpoint_net
-	port.EthIP = remoteip_net
-
-	LocalAddr, _ := net.ResolveUDPAddr("udp", tools.GetLocalIp()+":0")
-
-	netsocket, neterr := net.DialUDP("udp", LocalAddr, endpoint_net)
-	if neterr != nil {
-		log.Println("[PLANE][PLANE][ADD] Error connecting with [", endpoint, "]:", neterr.Error())
-		return
-	} else {
-		port.Socket = netsocket
-	}
 
 	sw.SPlane[mac] = port
 
