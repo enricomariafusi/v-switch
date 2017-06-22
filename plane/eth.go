@@ -42,7 +42,9 @@ func TapInterpreterThread() {
 		mymacaddr = tools.MACDestination(myframe).String()
 		ekey = []byte(VSwitch.SwID)
 		mytlv = tools.CreateTLV("F", myframe)
+		log.Printf("[PLANE][ETH] Created %d BYTE long TLV", len(mytlv))
 		encframe = crypt.FrameEncrypt(ekey, mytlv)
+		log.Printf("[PLANE][ETH] Encrypted frame is %d BYTE long TLV", len(encframe))
 
 		if tools.IsMacBcast(mymacaddr) {
 
