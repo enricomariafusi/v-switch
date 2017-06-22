@@ -40,14 +40,21 @@ func SeedingTask(remote string) {
 
 	}
 
+	for VSwitch.Server == nil {
+
+		log.Println("[PLANE][PLUG] Waiting 3 seconds the UDP server is running")
+		time.Sleep(3 * time.Second)
+
+	}
+
 	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
 	tmp_announce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
 	tmp_tlv := tools.CreateTLV("A", []byte(tmp_announce))
-	CustomDispatch(tmp_tlv, remote)
+	DispatchUDP(tmp_tlv, remote)
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Sent announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmp_announce)
 	tmp_tlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
-	CustomDispatch(tmp_tlv, remote)
+	DispatchUDP(tmp_tlv, remote)
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
 
 	for {

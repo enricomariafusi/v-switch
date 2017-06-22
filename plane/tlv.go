@@ -68,24 +68,12 @@ func DispatchTLV(mytlv []byte, mac string) {
 
 	if VSwitch.macIsKnown(mac) {
 
-		oaddr := VSwitch.SPlane[mac].EndPoint
+		DispatchUDP(mytlv, VSwitch.SPlane[mac].EndPoint.String())
 
-		n, err := VSwitch.Server.WriteToUDP(mytlv, oaddr) // we use the server IP and port as origin.
-		log.Printf("[PLANE][TLV][DISPATCH] Sent %d BYTES to %s [%s]: %t", n, mac, oaddr, err == nil)
-		if err != nil {
-			log.Printf("[PLANE][TLV][DISPATCH] cannot dispatch for MAC %s at [%s] : ", mac, oaddr, err.Error())
-			VSwitch.RemoveMAC(mac)
-		}
-
-	} else {
-		log.Println("[PLANE][TLV][DISPATCH] Unknown MAC: ", mac)
-
-		return
 	}
-
 }
 
-func CustomDispatch(mytlv []byte, remote string) {
+func DispatchUDP(mytlv []byte, remote string) {
 
 	var neterr error
 	var RemoteAddr *net.UDPAddr
@@ -94,16 +82,16 @@ func CustomDispatch(mytlv []byte, remote string) {
 
 	RemoteAddr, neterr = net.ResolveUDPAddr("udp", remote)
 	if neterr != nil {
-		log.Println("[PLANE][TLV][CustomDispatch] Remote address invalid :", neterr.Error())
+		log.Println("[PLANE][TLV][DispatchUDP] Remote address invalid :", neterr.Error())
 		return
 	}
 
 	n, neterr = VSwitch.Server.WriteToUDP(mytlv, RemoteAddr) // we use the server IP and port as origin.
 	if neterr != nil {
-		log.Println("[PLANE][TLV][CustomDispatch] Error Writing to [", remote, "]:", neterr.Error())
+		log.Println("[PLANE][TLV][DispatchUDP] Error Writing to [", remote, "]:", neterr.Error())
 		return
 	} else {
-		log.Printf("[PLANE][TLV][CustomDispatch] Written %d BYTES of %d to %s : %t", n, len(mytlv), remote, neterr == nil)
+		log.Printf("[PLANE][TLV][DispatchUDP] Written %d BYTES of %d to %s : %t", n, len(mytlv), remote, neterr == nil)
 	}
 
 }
