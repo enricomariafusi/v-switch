@@ -19,12 +19,12 @@ type vswitchplane struct {
 	//Ports map[string]string
 	//Conns map[string]net.Conn
 	SPlane map[string]Sport
-	HAddr  string // Hardware address of the local tap device
-	Fqdn   string // Public IP address if setup, or the local ip address
-	IPAdd  string // local ip address
-	SwID   string // deviceID
-	DevN   string //name of the tap device
-	Server *net.UDPConn
+	HAddr  string       // Hardware address of the local tap device
+	Fqdn   string       // Public IP address if setup, or the local ip address
+	IPAdd  string       // local ip address
+	SwID   string       // deviceID
+	DevN   string       //name of the tap device
+	Server *net.UDPConn // the UDP socket we use for listening at UDP side.
 }
 
 //V-Switch will be exported to UDP and to TAP
