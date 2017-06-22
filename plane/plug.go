@@ -55,14 +55,14 @@ func SeedingTask(remote string) {
 	// create a fake announceTLV
 	tmp_tlv := tools.CreateTLV("A", []byte(tmp_announce))
 	enc_tlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
-	DispatchUDP(enc_tlv, remote)
-	// create a query for mylself
-	log.Printf("[PLANE][PLUG][ANNOUNCE] Sent announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmp_announce)
-	tmp_tlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
-	enc_tlv = crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
+
+	log.Printf("[PLANE][PLUG][ANNOUNCE] Sending announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmp_announce)
 	DispatchUDP(enc_tlv, remote)
 
+	tmp_tlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
+	enc_tlv = crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
+	DispatchUDP(enc_tlv, remote)
 
 	for {
 
