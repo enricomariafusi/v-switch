@@ -81,6 +81,8 @@ func (sw *vswitchplane) RemoveMAC(mac string) {
 func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 
 	mac = strings.ToUpper(mac)
+	var p_endpoint *net.UDPAddr
+	var p_remoteip *net.IPAddr
 
 	_, err := net.ParseMAC(mac)
 	if err != nil {
@@ -93,13 +95,13 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 		return
 	}
 
-	_, err = net.ResolveUDPAddr("udp", endpoint)
+	p_endpoint, err = net.ResolveUDPAddr("udp", endpoint)
 	if err != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid UDP address: %s", endpoint, err.Error())
 		return
 	}
 
-	_, err = net.ResolveIPAddr("ip", remoteip)
+	p_remoteip, err = net.ResolveIPAddr("ip", remoteip)
 	if err != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid IP address: %s", remoteip, err.Error())
 		return
@@ -118,6 +120,9 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 	}
 
 	var port Sport
+
+	port.EndPoint = p_endpoint
+	port.EthIP = p_remoteip
 
 	sw.SPlane[mac] = port
 
