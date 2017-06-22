@@ -2,6 +2,7 @@ package plane
 
 import (
 	"V-switch/conf"
+	"V-switch/crypt"
 	"V-switch/tools"
 	"log"
 	"net"
@@ -50,11 +51,16 @@ func SeedingTask(remote string) {
 	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
 	tmp_announce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
+	// create a fake announceTLV
 	tmp_tlv := tools.CreateTLV("A", []byte(tmp_announce))
-	DispatchUDP(tmp_tlv, remote)
+	enc_tlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
+	DispatchUDP(enc_tlv, remote)
+	// create a query for mylself
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Sent announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmp_announce)
 	tmp_tlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
-	DispatchUDP(tmp_tlv, remote)
+	enc_tlv = crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
+	DispatchUDP(enc_tlv, remote)
+
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
 
 	for {
