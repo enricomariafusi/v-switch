@@ -128,13 +128,9 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 func (vd *Vswitchdevice) WriteFrameThread() {
 
-	var n_frame []byte
-
 	log.Printf("[TAP][WRITE] Tap writing thread started")
 
-	for {
-
-		n_frame = <-plane.PlaneToTap
+	for n_frame := range plane.PlaneToTap {
 
 		n, err := vd.Realif.Write(n_frame)
 		if err != nil {
