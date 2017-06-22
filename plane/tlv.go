@@ -16,13 +16,10 @@ func init() {
 
 func TLVInterpreter() {
 
-	var my_tlv_enc []byte
-
 	log.Println("[PLANE][TLV][INTERPRETER] Thread starts")
 
-	for {
+	for my_tlv_enc := range UdpToPlane {
 
-		my_tlv_enc = <-UdpToPlane
 		log.Printf("[PLANE][TLV][INTERPRETER] Read %d bytes from UdpToPlane", len(my_tlv_enc))
 
 		my_tlv := crypt.FrameDecrypt([]byte(VSwitch.SwID), my_tlv_enc)

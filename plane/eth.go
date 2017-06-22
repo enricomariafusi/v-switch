@@ -29,15 +29,13 @@ func TapInterpreterThread() {
 
 	}
 
-	var myframe []byte
 	var mymacaddr string
 	var mytlv []byte
 	var encframe []byte
 	var ekey []byte
 
-	for {
+	for myframe := range TapToPlane {
 
-		myframe = <-TapToPlane
 		log.Printf("[PLANE][ETH] Read %d Bytes frame from QUEUE TapToPlane", len(myframe))
 		mymacaddr = tools.MACDestination(myframe).String()
 		ekey = []byte(VSwitch.SwID)
