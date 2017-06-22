@@ -1,7 +1,6 @@
 package plane
 
 import (
-	"V-switch/conf"
 	"V-switch/crypt"
 
 	"V-switch/tools"
@@ -21,17 +20,12 @@ func TapInterpreterThread() {
 
 	log.Printf("[PLANE][ETH] Ethernet Thread initialized")
 
-	for {
+	var e error = nil
 
-		_, e := net.ParseMAC(VSwitch.HAddr)
-
-		if e != nil {
-			log.Println("[PLANE][ETH] Waiting 10 seconds device is there")
-			time.Sleep(10 * time.Second)
-
-		} else {
-			break
-		}
+	for e == nil {
+		_, e = net.ParseMAC(VSwitch.HAddr)
+		log.Println("[PLANE][ETH] Waiting 3 seconds the MAC is there")
+		time.Sleep(3 * time.Second)
 
 	}
 
@@ -46,20 +40,20 @@ func TapInterpreterThread() {
 		myframe = <-TapToPlane
 		log.Printf("[PLANE][ETH] Read %d Bytes frame from QUEUE TapToPlane", len(myframe))
 		mymacaddr = tools.MACDestination(myframe).String()
-		ekey = []byte(conf.GetConfigItem("SWITCHID"))
-		encframe = crypt.FrameEncrypt(ekey, myframe)
-		mytlv = tools.CreateTLV("F", encframe)
+		ekey = []byte(VSwitch.SwID)
+		mytlv = tools.CreateTLV("F", myframe)
+		encframe = crypt.FrameEncrypt(ekey, mytlv)
 
 		if tools.IsMacBcast(mymacaddr) {
 
 			for mac, _ := range VSwitch.SPlane {
 
-				DispatchTLV(mytlv, strings.ToUpper(mac))
+				DispatchTLV(encframe, strings.ToUpper(mac))
 			}
 
 		} else {
 
-			DispatchTLV(mytlv, strings.ToUpper(mymacaddr))
+			DispatchTLV(encframe, strings.ToUpper(mymacaddr))
 
 		}
 
