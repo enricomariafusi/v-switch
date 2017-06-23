@@ -60,9 +60,9 @@ func (lf *vswitchlogfile) SetLogFolder() {
 
 		lf.logfile, _ = os.Create(lf.filename)
 
-		log.SetPrefix("V-SWITCH> ")
 		log.Println("[TOOLS][LOG] Logfile is: " + lf.filename)
 		log.SetOutput(lf.logfile)
+		log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
 
 	} else {
 		log.SetOutput(ioutil.Discard)
@@ -80,6 +80,7 @@ func (lf *vswitchlogfile) EnableLog() {
 func (lf *vswitchlogfile) DisableLog() {
 
 	lf.active = false
+	log.SetFlags(0)
 	log.SetOutput(ioutil.Discard)
 
 }
