@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+var NetM plane.NetMessage
+
 func init() {
 
 	plane.VSwitch.Server = UdpCreateServer(conf.GetConfigItem("PORT"))
@@ -70,8 +72,9 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 		if err != nil {
 			log.Println("[UDP][SERVER] Error while reading: ", err.Error())
 		} else {
-
-			plane.UdpToPlane <- buf[:n]
+			NetM.ETlv = buf[:n]
+			NetM.Addr = addr.String()
+			plane.UdpToPlane <- NetM
 
 		}
 

@@ -20,9 +20,9 @@ func TLVInterpreter() {
 
 	for my_tlv_enc := range UdpToPlane {
 
-		log.Printf("[PLANE][TLV][INTERPRETER] Read %d bytes from UdpToPlane", len(my_tlv_enc))
+		log.Printf("[PLANE][TLV][INTERPRETER] Read %d bytes from UdpToPlane", len(my_tlv_enc.ETlv))
 
-		my_tlv := crypt.FrameDecrypt([]byte(VSwitch.SwID), my_tlv_enc)
+		my_tlv := crypt.FrameDecrypt([]byte(VSwitch.SwID), my_tlv_enc.ETlv)
 		if my_tlv == nil {
 			log.Printf("[PLANE][TLV][ERROR] Invalid KEY(%d): %s", len(VSwitch.SwID), VSwitch.SwID)
 			continue
@@ -49,8 +49,16 @@ func TLVInterpreter() {
 			announce := string(payload)
 			if strings.Count(announce, "|") == 2 {
 				fields := strings.Split(announce, "|")
+				VSwitch.AddMac(fields[0], my_tlv_enc.Addr, fields[2])
+			}
+
+		case "D":
+			announce := string(payload)
+			if strings.Count(announce, "|") == 2 {
+				fields := strings.Split(announce, "|")
 				VSwitch.AddMac(fields[0], fields[1], fields[2])
 			}
+
 		case "Q":
 			sourcemac := string(payload)
 			for alienmac, _ := range VSwitch.SPlane {
@@ -130,7 +138,7 @@ func AnnounceAlien(alien_mac string, mac string) {
 
 	log.Printf("[PLANE][ANNOUNCEALIEN] Announcing [%s] ", myannounce)
 
-	tlv := tools.CreateTLV("A", []byte(myannounce))
+	tlv := tools.CreateTLV("D", []byte(myannounce))
 
 	tlv_enc := crypt.FrameEncrypt([]byte(VSwitch.SwID), tlv)
 
