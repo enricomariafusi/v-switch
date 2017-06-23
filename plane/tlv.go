@@ -47,9 +47,9 @@ func TLVInterpreter() {
 			// someone is announging itself
 		case "A":
 			announce := string(payload)
-			if strings.Count(announce, "|") == 2 {
+			if strings.Count(announce, "|") == 1 {
 				fields := strings.Split(announce, "|")
-				VSwitch.AddMac(fields[0], my_tlv_enc.Addr, fields[2])
+				VSwitch.AddMac(fields[0], my_tlv_enc.Addr, fields[1])
 			}
 
 		case "D":
@@ -115,7 +115,8 @@ func AnnounceLocal(mac string) {
 
 	mac = strings.ToUpper(mac)
 
-	myannounce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
+	strs := make([]string, 2)
+	myannounce := strings.Join(append(strs, VSwitch.HAddr, VSwitch.IPAdd), "|")
 
 	log.Printf("[PLANE][ANNOUNCELOCAL] Announcing [%s] ", myannounce)
 
@@ -133,10 +134,8 @@ func AnnounceAlien(alien_mac string, mac string) {
 	mac = strings.ToUpper(mac)
 	alien_mac = strings.ToUpper(alien_mac)
 
-	tmp_endpoint := VSwitch.SPlane[alien_mac].EndPoint
-	tmp_ethIP := VSwitch.SPlane[alien_mac].EthIP
-
-	myannounce := alien_mac + "|" + tmp_endpoint.String() + "|" + tmp_ethIP.String()
+	strs := make([]string, 3)
+	myannounce := strings.Join(append(strs, alien_mac, VSwitch.SPlane[alien_mac].EndPoint.String(), VSwitch.SPlane[alien_mac].EthIP.String()), "|")
 
 	log.Printf("[PLANE][ANNOUNCEALIEN] Announcing [%s] ", myannounce)
 
