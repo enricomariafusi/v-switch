@@ -51,7 +51,7 @@ func SeedingTask(remote string) {
 
 	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
-	tmp_announce := VSwitch.HAddr + "|" + VSwitch.Fqdn + "|" + VSwitch.IPAdd
+	tmp_announce := VSwitch.HAddr + "|" + VSwitch.IPAdd
 	// create a fake announceTLV
 	tmp_tlv := tools.CreateTLV("A", []byte(tmp_announce))
 	enc_tlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
