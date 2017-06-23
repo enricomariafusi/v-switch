@@ -57,7 +57,7 @@ func init() {
 
 		log.Println("[CRYPT][GPG] Originaltext Len: ", len(originalText))
 		log.Println("[CRYPT][GPG] EncryptedText Len: ", len(encrypted))
-
+		log.Println("[CRYPT][GPG] DEcryptedText Len: ", len(inverted))
 		if reflect.DeepEqual(inverted, originalText) {
 			log.Printf("[CRYPT][GPG] AES engine test %d PASSED", i+1)
 		} else {

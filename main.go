@@ -33,6 +33,8 @@ func main() {
 	if co.GetConfigItem("DEBUG") != "TRUE" {
 		log.Println("[MAIN] End of bootstrap.")
 		to.VSlogfile.DisableLog()
+	} else {
+		log.Println("[MAIN] End of bootstrap.")
 	}
 
 	select {}

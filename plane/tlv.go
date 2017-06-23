@@ -83,6 +83,8 @@ func DispatchTLV(mytlv []byte, mac string) {
 
 		DispatchUDP(mytlv, VSwitch.SPlane[mac].EndPoint.String())
 
+	} else {
+		log.Println("[PLANE][TLV][DISPATCH] Unknown MAC : [ ", mac, " ]")
 	}
 }
 

@@ -53,7 +53,7 @@ func (lf *vswitchlogfile) SetLogFolder() {
 
 		const layout = "2006-01-02.15"
 
-		orario := time.Now()
+		orario := time.Now().UTC()
 
 		var currentFolder = Hpwd()
 		lf.filename = filepath.Join(currentFolder, "logs", "vswitch."+orario.Format(layout)+"00.log")
