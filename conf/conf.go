@@ -20,7 +20,7 @@ func init() {
 
 	readConfig(GConfigFile)
 
-	ConfCheck()
+	confCheck()
 
 }
 
@@ -68,6 +68,7 @@ func readConfig(FileName string) {
 
 }
 
+// ConfigItemExists checks if a given item is present
 func ConfigItemExists(item string) bool {
 
 	_, exists := VConfig[item]
@@ -76,16 +77,18 @@ func ConfigItemExists(item string) bool {
 
 }
 
+// GetConfigItem returns the value coresponding to a configuration item
 func GetConfigItem(item string) string {
 
 	if ConfigItemExists(item) {
 		return VConfig[item]
-	} else {
-		return ""
 	}
+	return ""
 
 }
 
+// SetConfigItem changes the value of a configuration item in memory:
+// note: it doesn't changes the config file.
 func SetConfigItem(item string, value string) {
 
 	VConfig[item] = value

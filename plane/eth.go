@@ -16,11 +16,12 @@ func init() {
 
 }
 
+//TapInterpreterThread is the thread which takes care of processing frames
 func TapInterpreterThread() {
 
 	log.Printf("[PLANE][ETH] Ethernet Thread initialized")
 
-	var e error = nil
+	var e error
 
 	for e == nil {
 		_, e = net.ParseMAC(VSwitch.HAddr)
@@ -46,7 +47,7 @@ func TapInterpreterThread() {
 
 		if tools.IsMacBcast(mymacaddr) {
 
-			for mac, _ := range VSwitch.SPlane {
+			for mac := range VSwitch.SPlane {
 
 				DispatchTLV(encframe, strings.ToUpper(mac))
 			}

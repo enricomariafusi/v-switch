@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 )
 
+// GpGconfig is a needed container for GPG parameters to be used
 var GpGconfig packet.Config
 
 func init() {

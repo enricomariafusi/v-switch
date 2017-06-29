@@ -16,14 +16,14 @@ func init() {
 		conf.SetConfigItem("SEED", "MASTER")
 	}
 
-	seed_address := conf.GetConfigItem("SEED")
+	seedAddress := conf.GetConfigItem("SEED")
 
-	if seed_address == "MASTER" {
+	if seedAddress == "MASTER" {
 		log.Println("[PLANE][PLUG]: NO SEED, We are master node: Yay! ")
 	} else {
 
-		log.Println("[PLANE][PLUG]: Starting SEED to: ", seed_address)
-		go SeedingTask(seed_address)
+		log.Println("[PLANE][PLUG]: Starting SEED to: ", seedAddress)
+		go SeedingTask(seedAddress)
 	}
 
 }
@@ -33,7 +33,7 @@ func SeedingTask(remote string) {
 	cycle, _ := strconv.Atoi(conf.GetConfigItem("TTL"))
 	log.Println("[PLANE][PLUG] TTL is:", cycle)
 
-	var e error = nil
+	var e error
 
 	for e == nil {
 		_, e = net.ParseMAC(VSwitch.HAddr)
@@ -51,25 +51,25 @@ func SeedingTask(remote string) {
 
 	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
-	tmp_announce := VSwitch.HAddr + "|" + VSwitch.IPAdd
+	tmpAnnounce := VSwitch.HAddr + "|" + VSwitch.IPAdd
 	// create a fake announceTLV
-	tmp_tlv := tools.CreateTLV("A", []byte(tmp_announce))
-	enc_tlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
+	tmpTlv := tools.CreateTLV("A", []byte(tmpAnnounce))
+	encTlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmpTlv)
 
-	log.Printf("[PLANE][PLUG][ANNOUNCE] Sending announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmp_announce)
-	DispatchUDP(enc_tlv, remote)
+	log.Printf("[PLANE][PLUG][ANNOUNCE] Sending announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmpAnnounce)
+	DispatchUDP(encTlv, remote)
 
-	tmp_tlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
-	enc_tlv = crypt.FrameEncrypt([]byte(VSwitch.SwID), tmp_tlv)
+	tmpTlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
+	encTlv = crypt.FrameEncrypt([]byte(VSwitch.SwID), tmpTlv)
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
-	DispatchUDP(enc_tlv, remote)
+	DispatchUDP(encTlv, remote)
 
 	for {
 
 		// announces everybody + self to everybody
-		for alienmac, _ := range VSwitch.SPlane {
+		for alienmac := range VSwitch.SPlane {
 			AnnounceLocal(alienmac)
-			for destmac, _ := range VSwitch.SPlane {
+			for destmac := range VSwitch.SPlane {
 				if alienmac != destmac {
 					AnnounceAlien(alienmac, destmac)
 				}

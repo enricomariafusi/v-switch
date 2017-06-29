@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+//Sport represents a Switch Port
 type Sport struct {
 	EndPoint *net.UDPAddr // IP:PORT of the remote peer
 	EthIP    *net.IPAddr  // Ip on the interface of remote peer.
@@ -81,8 +82,8 @@ func (sw *vswitchplane) RemoveMAC(mac string) {
 func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 
 	mac = strings.ToUpper(mac)
-	var p_endpoint *net.UDPAddr
-	var p_remoteip *net.IPAddr
+	var pEndpoint *net.UDPAddr
+	var pRemoteIP *net.IPAddr
 
 	_, err := net.ParseMAC(mac)
 	if err != nil {
@@ -95,13 +96,13 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 		return
 	}
 
-	p_endpoint, err = net.ResolveUDPAddr("udp", endpoint)
+	pEndpoint, err = net.ResolveUDPAddr("udp", endpoint)
 	if err != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid UDP address: %s", endpoint, err.Error())
 		return
 	}
 
-	p_remoteip, err = net.ResolveIPAddr("ip", remoteip)
+	pRemoteIP, err = net.ResolveIPAddr("ip", remoteip)
 	if err != nil {
 		log.Printf("[PLANE][PORT][ADD] [ %s ] is not a valid IP address: %s", remoteip, err.Error())
 		return
@@ -109,22 +110,23 @@ func (sw *vswitchplane) AddMac(mac string, endpoint string, remoteip string) {
 
 	// if the MAC is known and data are the same, no need to change
 	if sw.macIsKnown(mac) {
-		tmp_endpoint := sw.SPlane[mac].EndPoint
-		tmp_remoteip := sw.SPlane[mac].EthIP
-		if (endpoint == tmp_endpoint.String()) && (remoteip == tmp_remoteip.String()) {
+		tmpEndpoint := sw.SPlane[mac].EndPoint
+		tmpRemoteIP := sw.SPlane[mac].EthIP
+		if (endpoint == tmpEndpoint.String()) && (remoteip == tmpRemoteIP.String()) {
+			log.Printf("[PLANE][PORT][ADD] We already have %s|%s|%s , skipping", mac, endpoint, remoteip)
 			return
 		} else {
+			log.Printf("[PLANE][PORT][ADD] Old port was: %s|%s|%s , updating", mac, tmpEndpoint, tmpRemoteIP)
 			sw.RemoveMAC(mac)
 		}
-
 	}
 
 	var port Sport
 
 	log.Printf("[PLANE][PORT][ADD] Adding %s|%s|%s ", mac, endpoint, remoteip)
 
-	port.EndPoint = p_endpoint
-	port.EthIP = p_remoteip
+	port.EndPoint = pEndpoint
+	port.EthIP = pRemoteIP
 
 	sw.SPlane[mac] = port
 

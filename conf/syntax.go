@@ -9,7 +9,8 @@ import (
 	"strconv"
 )
 
-func ConfCheck() {
+// ConfCheck does the due diligence on the config file
+func confCheck() {
 
 	ConfigItems := []string{
 		"MTU",
@@ -27,10 +28,10 @@ func ConfCheck() {
 
 	// everything but 		"PUBLIC" and "SEED",
 
-	for _, c_item := range ConfigItems {
+	for _, cItem := range ConfigItems {
 
-		if !ConfigItemExists(c_item) {
-			log.Printf("[CONF][SYNTAX] No %s in configuration. It is mandatory", c_item)
+		if !ConfigItemExists(cItem) {
+			log.Printf("[CONF][SYNTAX] No %s in configuration. It is mandatory", cItem)
 			os.Exit(1)
 		}
 
