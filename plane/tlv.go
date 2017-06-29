@@ -115,7 +115,7 @@ func AnnounceLocal(mac string) {
 
 	mac = strings.ToUpper(mac)
 
-	strs := make([]string, 2)
+	var strs []string
 	myannounce := strings.Join(append(strs, VSwitch.HAddr, VSwitch.IPAdd), "|")
 
 	log.Printf("[PLANE][ANNOUNCELOCAL] Announcing [%s] ", myannounce)
