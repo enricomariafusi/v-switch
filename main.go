@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 )
 
 func init() {
@@ -37,8 +38,11 @@ func main() {
 		log.Println("[MAIN] End of bootstrap.")
 	}
 
-	select {}
-
+	// Just a nice way to wait until the Operating system sends a kill signal.
+	// select{} was just horrible.
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	<-c
 	os.Exit(0)
 
 }
