@@ -134,7 +134,7 @@ func AnnounceAlien(alien_mac string, mac string) {
 	mac = strings.ToUpper(mac)
 	alien_mac = strings.ToUpper(alien_mac)
 
-	strs := make([]string, 3)
+	var strs []string
 	myannounce := strings.Join(append(strs, alien_mac, VSwitch.SPlane[alien_mac].EndPoint.String(), VSwitch.SPlane[alien_mac].EthIP.String()), "|")
 
 	log.Printf("[PLANE][ANNOUNCEALIEN] Announcing [%s] ", myannounce)
