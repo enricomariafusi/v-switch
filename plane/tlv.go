@@ -20,56 +20,62 @@ func TLVInterpreter() {
 
 	for my_tlv_enc := range UdpToPlane {
 
-		log.Printf("[PLANE][TLV][INTERPRETER] Read %d bytes from UdpToPlane", len(my_tlv_enc.ETlv))
+		go interpreter(my_tlv_enc)
 
-		my_tlv := crypt.FrameDecrypt([]byte(VSwitch.SwID), my_tlv_enc.ETlv)
-		if my_tlv == nil {
-			log.Printf("[PLANE][TLV][ERROR] Invalid KEY(%d): %s", len(VSwitch.SwID), VSwitch.SwID)
-			continue
-		} else {
-			log.Printf("[PLANE][TLV][INTERPRETER] Decrypted GOB %d BYTES long", len(my_tlv))
+	}
+
+}
+
+func interpreter(mytlvenc NetMessage) {
+
+	log.Printf("[PLANE][TLV][INTERPRETER] Read %d bytes from UdpToPlane", len(mytlvenc.ETlv))
+
+	my_tlv := crypt.FrameDecrypt([]byte(VSwitch.SwID), mytlvenc.ETlv)
+	if my_tlv == nil {
+		log.Printf("[PLANE][TLV][ERROR] Invalid KEY(%d): %s", len(VSwitch.SwID), VSwitch.SwID)
+		return
+	} else {
+		log.Printf("[PLANE][TLV][INTERPRETER] Decrypted GOB %d BYTES long", len(my_tlv))
+	}
+
+	typ, ln, payload := tools.UnPackTLV(my_tlv)
+
+	if ln == 0 {
+		log.Printf("[PLANE][TLV][ERROR] Payload was empty, nothing to do")
+		return
+	}
+
+	log.Println("[PLANE][TLV][INTERPRETER] Received valid payload, type [", typ, "]")
+
+	switch typ {
+
+	// it is a frame
+	case "F":
+		PlaneToTap <- payload
+		// someone is announging itself
+	case "A":
+		announce := string(payload)
+		if strings.Count(announce, "|") == 1 {
+			fields := strings.Split(announce, "|")
+			VSwitch.AddMac(fields[0], mytlvenc.Addr, fields[1])
 		}
 
-		typ, ln, payload := tools.UnPackTLV(my_tlv)
-
-		if ln == 0 {
-			log.Printf("[PLANE][TLV][ERROR] Payload was empty, nothing to do")
-			continue
+	case "D":
+		announce := string(payload)
+		if strings.Count(announce, "|") == 2 {
+			fields := strings.Split(announce, "|")
+			VSwitch.AddMac(fields[0], fields[1], fields[2])
 		}
 
-		log.Println("[PLANE][TLV][INTERPRETER] Received valid payload, type [", typ, "]")
+	case "Q":
+		sourcemac := string(payload)
+		for alienmac, _ := range VSwitch.SPlane {
 
-		switch typ {
-
-		// it is a frame
-		case "F":
-			PlaneToTap <- payload
-			// someone is announging itself
-		case "A":
-			announce := string(payload)
-			if strings.Count(announce, "|") == 1 {
-				fields := strings.Split(announce, "|")
-				VSwitch.AddMac(fields[0], my_tlv_enc.Addr, fields[1])
-			}
-
-		case "D":
-			announce := string(payload)
-			if strings.Count(announce, "|") == 2 {
-				fields := strings.Split(announce, "|")
-				VSwitch.AddMac(fields[0], fields[1], fields[2])
-			}
-
-		case "Q":
-			sourcemac := string(payload)
-			for alienmac, _ := range VSwitch.SPlane {
-
-				AnnounceAlien(alienmac, sourcemac)
-			}
-
-		default:
-			log.Println("[PLANE][TLV][INTERPRETER] Unknown type, discarded: [ ", typ, " ]")
-
+			AnnounceAlien(alienmac, sourcemac)
 		}
+
+	default:
+		log.Println("[PLANE][TLV][INTERPRETER] Unknown type, discarded: [ ", typ, " ]")
 
 	}
 

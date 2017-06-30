@@ -137,13 +137,18 @@ func (vd *Vswitchdevice) WriteFrameThread() {
 
 	for nFrame := range plane.PlaneToTap {
 
-		n, err := vd.Realif.Write(nFrame)
-		if err != nil {
-			log.Printf("[TAP][WRITE][ERROR] Error writing %d bytes to %s : %s", len(nFrame), vd.devicename, err.Error())
-		} else {
-			log.Printf("[TAP][WRITE] %d long frame of %d , from %s -> %s  to dev %s", n, len(nFrame), tools.MACSource(nFrame).String(), tools.MACDestination(nFrame).String(), vd.devicename)
-		}
+		go vd.writeFrameIO(nFrame)
+	}
 
+}
+
+func (vd *Vswitchdevice) writeFrameIO(myframe []byte) {
+
+	n, err := vd.Realif.Write(myframe)
+	if err != nil {
+		log.Printf("[TAP][WRITE][ERROR] Error writing %d bytes to %s : %s", len(myframe), vd.devicename, err.Error())
+	} else {
+		log.Printf("[TAP][WRITE] %d long frame of %d , from %s -> %s  to dev %s", n, len(myframe), tools.MACSource(myframe).String(), tools.MACDestination(myframe).String(), vd.devicename)
 	}
 
 }
