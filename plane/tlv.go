@@ -69,9 +69,12 @@ func interpreter(mytlvenc NetMessage) {
 
 	case "Q":
 		sourcemac := string(payload)
-		for alienmac, _ := range VSwitch.SPlane {
+		if len(VSwitch.SPlane) > 0 {
+			for alienmac := range VSwitch.SPlane {
 
-			AnnounceAlien(alienmac, sourcemac)
+				AnnounceAlien(alienmac, sourcemac)
+			}
+			log.Println("[PLANE][TLV][INTERPRETER] PROCESSED valid payload, type [", typ, "]")
 		}
 
 	default:
