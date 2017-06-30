@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os/exec"
+	"strings"
 
 	"time"
 )
@@ -38,9 +39,9 @@ func SetIpAddress() {
 
 	err := ifcnfg.Run()
 	if err != nil {
-		log.Printf("[TAP][IP] Error executing  %q: %s", ifcnfg.Args, err.Error())
+		log.Printf("[TAP][IP] Error executing  %q: %s", strings.Join(ifcnfg.Args, " "), err.Error())
 	} else {
-		log.Printf("[TAP][IP] Executed   %q", ifcnfg.Args)
+		log.Printf("[TAP][IP] Executed   %q", strings.Join(ifcnfg.Args, " "))
 	}
 
 }

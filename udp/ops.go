@@ -4,6 +4,7 @@ import (
 	"V-switch/conf"
 	"V-switch/plane"
 	"V-switch/tools"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -14,8 +15,7 @@ var NetM plane.NetMessage
 
 func init() {
 
-	plane.VSwitch.Server = UdpCreateServer(conf.GetConfigItem("PORT"))
-	go UDPReadMessage(plane.VSwitch.Server)
+	go UDPReadMessage()
 
 }
 
@@ -53,13 +53,26 @@ func UdpCreateServer(port string) *net.UDPConn {
 
 }
 
-func UDPReadMessage(ServerConn *net.UDPConn) {
+func UDPReadMessage() {
+
+	defer func() {
+		if e := recover(); e != nil {
+			log.Println("[UDP][SERVER] Network listener issue, trying to save it")
+			err, ok := e.(error)
+			if !ok {
+				err = fmt.Errorf("[EXC]: %v", e)
+			}
+			log.Printf("[UDP][SERVER] Error: <%s>", err)
+
+		}
+	}()
+
+	plane.VSwitch.Server = UdpCreateServer(conf.GetConfigItem("PORT"))
+	ServerConn := plane.VSwitch.Server
 
 	log.Println("[UDP][SERVER] Reading thread started")
 
 	readbuffer, _ := strconv.Atoi(conf.GetConfigItem("MTU")) // at least the  MTU max size
-
-	defer ServerConn.Close()
 
 	buf := make([]byte, 3*readbuffer) // enough for the payload , even if encrypted ang gob encoded
 	log.Println("[UDP][SERVER] Read MTU set to ", 3*readbuffer)
@@ -72,9 +85,13 @@ func UDPReadMessage(ServerConn *net.UDPConn) {
 		if err != nil {
 			log.Println("[UDP][SERVER] Error while reading: ", err.Error())
 		} else {
-			NetM.ETlv = buf[:n]
-			NetM.Addr = addr.String()
-			plane.UdpToPlane <- NetM
+
+			go func(msg []byte, ind *net.UDPAddr) {
+				NetM.ETlv = msg
+				NetM.Addr = ind.String()
+				plane.UdpToPlane <- NetM
+
+			}(buf[:n], addr)
 
 		}
 
