@@ -39,13 +39,8 @@ func init() {
 
 	log.Printf("[PLANE][PLANE] PORTS: %b", len(VSwitch.SPlane))
 
-	if conf.GetConfigItem("PUBLIC") != "HOSTNAME" {
-		VSwitch.Fqdn = conf.GetConfigItem("PUBLIC")
-		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
-	} else {
-		VSwitch.Fqdn = tools.GetLocalIp() + ":" + conf.GetConfigItem("PORT")
-		log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
-	}
+	VSwitch.Fqdn = tools.GetLocalIp() + ":" + conf.GetConfigItem("PORT")
+	log.Println("[PLANE] dynamic hostid set to", VSwitch.Fqdn)
 
 	VSwitch.IPAdd = conf.GetConfigItem("DEVICEADDR")
 	VSwitch.DevN = conf.GetConfigItem("DEVICENAME")
