@@ -30,33 +30,34 @@ func TapInterpreterThread() {
 
 	}
 
-	var mymacaddr string
-	var mytlv []byte
-	var encframe []byte
-	var ekey []byte
+	for cframe := range TapToPlane {
 
-	for myframe := range TapToPlane {
+		go processFrame(cframe) // reads as fast is possible
 
-		log.Printf("[PLANE][ETH] Read %d Bytes frame from QUEUE TapToPlane", len(myframe))
-		mymacaddr = tools.MACDestination(myframe).String()
-		ekey = []byte(VSwitch.SwID)
-		mytlv = tools.CreateTLV("F", myframe)
-		log.Printf("[PLANE][ETH] Created %d BYTE long TLV", len(mytlv))
-		encframe = crypt.FrameEncrypt(ekey, mytlv)
-		log.Printf("[PLANE][ETH] Encrypted frame is %d BYTE long TLV", len(encframe))
+	}
 
-		if tools.IsMacBcast(mymacaddr) {
+}
 
-			for mac := range VSwitch.SPlane {
+func processFrame(myframe []byte) {
 
-				DispatchTLV(encframe, strings.ToUpper(mac))
-			}
+	log.Printf("[PLANE][ETH] Read %d Bytes frame from QUEUE TapToPlane", len(myframe))
+	mymacaddr := tools.MACDestination(myframe).String()
+	ekey := []byte(VSwitch.SwID)
+	mytlv := tools.CreateTLV("F", myframe)
+	log.Printf("[PLANE][ETH] Created %d BYTE long TLV", len(mytlv))
+	encframe := crypt.FrameEncrypt(ekey, mytlv)
+	log.Printf("[PLANE][ETH] Encrypted frame is %d BYTE long TLV", len(encframe))
 
-		} else {
+	if tools.IsMacBcast(mymacaddr) {
 
-			DispatchTLV(encframe, strings.ToUpper(mymacaddr))
+		for mac := range VSwitch.SPlane {
 
+			DispatchTLV(encframe, strings.ToUpper(mac))
 		}
+
+	} else {
+
+		DispatchTLV(encframe, strings.ToUpper(mymacaddr))
 
 	}
 
