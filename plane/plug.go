@@ -64,7 +64,14 @@ func SeedingTask(remote string) {
 	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
 	DispatchUDP(encTlv, remote)
 
-	for {
+	ticker := time.NewTicker(time.Duration(cycle) * time.Second)
+
+	for _ = range ticker.C {
+
+		if len(VSwitch.SPlane) == 0 {
+			log.Printf("[PLANE][PLUG][ALIGN] Plane is empty, nothing to announce")
+			continue
+		}
 
 		// announces everybody + self to everybody
 		for alienmac := range VSwitch.SPlane {
@@ -76,8 +83,6 @@ func SeedingTask(remote string) {
 			}
 
 		}
-
-		time.Sleep(time.Duration(cycle) * time.Second)
 
 	}
 

@@ -18,7 +18,7 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 
 	plaintext := text
 
-	block, err := aes.NewCipher(key)
+	eblock, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println("[CRYPT][AES][ENC] problem %s", err.Error())
 		return nil
@@ -26,24 +26,23 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
-	ciphertext := make([]byte, len(plaintext))
+	eciphertext := make([]byte, len(plaintext))
 	eiv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, eiv); err != nil {
 		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
 	}
 
-	stream := cipher.NewCFBEncrypter(block, eiv)
-	stream.XORKeyStream(ciphertext, plaintext)
+	stream := cipher.NewCFBEncrypter(eblock, eiv)
+	stream.XORKeyStream(eciphertext, plaintext)
 
 	// return converted frame
-	return append(eiv, ciphertext...)
+	return append(eiv, eciphertext...)
 }
 
 func FrameDecrypt(key []byte, cryptoText []byte) []byte {
-	ciphertext := cryptoText
 
-	block, err := aes.NewCipher(key)
+	dblock, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
@@ -51,17 +50,19 @@ func FrameDecrypt(key []byte, cryptoText []byte) []byte {
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
-	if len(ciphertext) < aes.BlockSize {
+	if len(cryptoText) < aes.BlockSize {
 		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
 	}
-	div := ciphertext[:aes.BlockSize]
-	ciphertext = ciphertext[aes.BlockSize:]
+	div := cryptoText[:aes.BlockSize]
+	dciphertext := cryptoText[aes.BlockSize:]
 
-	stream := cipher.NewCFBDecrypter(block, div)
+	stream := cipher.NewCFBDecrypter(dblock, div)
+
+	dresult := make([]byte, len(dciphertext))
 
 	// XORKeyStream can work in-place if the two arguments are the same.
-	stream.XORKeyStream(ciphertext, ciphertext)
+	stream.XORKeyStream(dresult, dciphertext)
 
-	return ciphertext
+	return dresult
 }

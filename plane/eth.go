@@ -42,6 +42,7 @@ func processFrame(myframe []byte) {
 
 	log.Printf("[PLANE][ETH] Read %d Bytes frame from QUEUE TapToPlane", len(myframe))
 	mymacaddr := tools.MACDestination(myframe).String()
+	mymacaddr = strings.ToUpper(mymacaddr)
 	ekey := []byte(VSwitch.SwID)
 	mytlv := tools.CreateTLV("F", myframe)
 	log.Printf("[PLANE][ETH] Created %d BYTE long TLV", len(mytlv))
