@@ -6,17 +6,13 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"regexp"
 
 	"strings"
 	"time"
 )
 
 var letters = []rune("0123456789-+@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-type Tlv struct {
-	T string // type of TLV
-	P []byte // payload
-}
 
 //RandSeq returns a random string
 func RandSeq(n int) string {
@@ -81,26 +77,37 @@ func CreateTLV(typ string, payload []byte) []byte {
 
 	payloadB64 := base64.StdEncoding.EncodeToString(payload)
 
-	return []byte(typ + "|" + payloadB64)
+	var ret bytes.Buffer
+
+	ret.WriteString(typ)
+	ret.WriteString("|")
+	ret.WriteString(payloadB64)
+
+	return ret.Bytes()
 
 }
 
 func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
-	if bytes.Count(n_tlv, []byte("|")) != 1 {
-		log.Println("[TOOLS][TLV][UNPACK] WTF is that:", string(n_tlv))
+	re := regexp.MustCompile("^([AQFD])[|]([A-Za-z0-9+/=]+)$")
+
+	tlv := re.FindStringSubmatch(string(n_tlv))
+
+	if tlv == nil {
+		log.Println("[TOOLS][TLV][UNPACK] WTF is this: ", string(n_tlv))
 		return "Z", 0, nil
 	}
-	tlv := bytes.Split(n_tlv, []byte("|"))
 
-	tlvBin, err := base64.StdEncoding.DecodeString(string(tlv[1]))
+	// tlv[1] contains the typ , tlv[2] contains the payload
+
+	tlvBin, err := base64.StdEncoding.DecodeString(tlv[2])
 
 	if err != nil {
 		log.Println("[TOOLS][TLV][UNPACK] Error with base64:", err.Error())
 		return "Z", 0, nil
 	}
 
-	return string(tlv[0]), len(tlvBin), tlvBin
+	return tlv[1], len(tlvBin), tlvBin
 
 }
 
