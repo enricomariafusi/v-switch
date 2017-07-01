@@ -75,6 +75,10 @@ func AddrResolve(fqdn string) (addr string) {
 
 func CreateTLV(typ string, payload []byte) []byte {
 
+	if len(payload) == 0 {
+		return nil
+	}
+
 	payloadB64 := base64.StdEncoding.EncodeToString(payload)
 
 	return []byte(typ + "|" + payloadB64)
@@ -83,6 +87,10 @@ func CreateTLV(typ string, payload []byte) []byte {
 
 func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
+	if bytes.Count(n_tlv, []byte("|")) != 1 {
+		log.Println("[TOOLS][TLV][UNPACK] WTF is that:", string(n_tlv))
+		return "Z", 0, nil
+	}
 	tlv := bytes.Split(n_tlv, []byte("|"))
 
 	tlvBin, err := base64.StdEncoding.DecodeString(string(tlv[1]))
