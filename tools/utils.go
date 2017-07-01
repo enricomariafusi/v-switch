@@ -77,8 +77,10 @@ func CreateTLV(typ string, payload []byte) []byte {
 	var ret bytes.Buffer
 
 	ret.WriteString(typ)
-	ret.WriteString("|")
+	ret.WriteString(":")
 	ret.WriteString(base64.StdEncoding.EncodeToString(payload))
+
+	log.Println("[TOOLS][TLV][CREATE] Frame created: ", ret.String())
 
 	return ret.Bytes()
 
@@ -86,13 +88,13 @@ func CreateTLV(typ string, payload []byte) []byte {
 
 func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
-	if n_tlv[1] != '|' {
+	if n_tlv[1] != ':' {
 		log.Println("[TOOLS][TLV][UNPACK] WTF is this frame: ", string(n_tlv))
 		return "Z", 0, nil
 	}
 
 	if strings.Contains("AQFD", string(n_tlv[0])) == false {
-		log.Println("[TOOLS][TLV][UNPACK] WTF is this Type: ", string(n_tlv))
+		log.Println("[TOOLS][TLV][UNPACK] WTF is this Type: ", string(n_tlv[0]))
 		return "Z", 0, nil
 	}
 
