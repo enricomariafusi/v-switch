@@ -86,6 +86,8 @@ func answerquery(mac string) {
 		return
 	}
 
+	AnnounceLocal(mac)
+
 	if len(VSwitch.SPlane) > 0 {
 		for alienmac := range VSwitch.SPlane {
 

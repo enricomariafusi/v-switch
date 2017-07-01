@@ -2,7 +2,7 @@ package tools
 
 import (
 	"bytes"
-	"encoding/gob"
+	"encoding/base64"
 	"log"
 	"math/rand"
 	"net"
@@ -75,35 +75,19 @@ func AddrResolve(fqdn string) (addr string) {
 
 func CreateTLV(typ string, payload []byte) []byte {
 
-	var mybuffer bytes.Buffer
+	payloadB64 := base64.StdEncoding.EncodeToString(payload)
 
-	encoder := gob.NewEncoder(&mybuffer)
-
-	err := encoder.Encode(Tlv{typ, payload})
-	if err != nil {
-		log.Println("[TOOLS][UTILS][TLV] Problem encoding: ", err.Error())
-	}
-
-	return mybuffer.Bytes()
+	return []byte(typ + "|" + payloadB64)
 
 }
 
 func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
-	var mytlv Tlv
-	var mybuffer bytes.Buffer
+	tlv := bytes.Split(n_tlv, []byte("|"))
 
-	decoder := gob.NewDecoder(&mybuffer)
+	tlvBin, _ := base64.StdEncoding.DecodeString(string(tlv[1]))
 
-	mybuffer.Write(n_tlv)
-	err := decoder.Decode(&mytlv)
-	if err != nil {
-		log.Println("[TOOLS][UTILS][TLV] Error decoding TLV:", err.Error())
-		return "", 0, nil
-
-	}
-
-	return mytlv.T, len(mytlv.P), mytlv.P
+	return string(tlv[0]), len(tlvBin), tlvBin
 
 }
 
