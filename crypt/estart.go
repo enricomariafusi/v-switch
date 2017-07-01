@@ -13,11 +13,14 @@ func init() {
 
 	// Now testing the engine.
 
-	for i := 0; i < 16; i++ {
+	passed := 0
+	failed := 0
+
+	for i := 0; i < 100; i++ {
 
 		l := 32
 
-		originalText := []byte(tools.RandSeq(1000 + i - 8))
+		originalText := []byte(tools.RandSeq(50 * i))
 		key := []byte(conf.GetConfigItem("SWITCHID")) //at least as long as the MTU
 
 		if len(key) != l {
@@ -32,17 +35,17 @@ func init() {
 		encrypted := FrameEncrypt(key, originalText)
 		inverted := FrameDecrypt(key, encrypted)
 
-		log.Println("[CRYPT][AES256] Originaltext Len: ", len(originalText))
-		log.Println("[CRYPT][AES256] EncryptedText Len: ", len(encrypted))
-		log.Println("[CRYPT][AES256] DEcryptedText Len: ", len(inverted))
 		if reflect.DeepEqual(inverted, originalText) {
-			log.Printf("[CRYPT][AES256] AES engine test #%d PASSED", i+1)
+			passed++
+
 		} else {
-			log.Printf("[CRYPT][AES256] AES engine test #%d FAILED", i+1)
+			failed++
 
 		}
 
 	}
+
+	log.Printf("[CRYPT][AES256][TEST] Passed %d, Failed %d", passed, failed)
 
 }
 

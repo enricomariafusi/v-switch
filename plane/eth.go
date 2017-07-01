@@ -53,11 +53,13 @@ func processFrame(myframe []byte) {
 		for mac := range VSwitch.SPlane {
 
 			DispatchTLV(encframe, strings.ToUpper(mac))
+			log.Printf("[PLANE][ETH] Dispatched Broadcast frame to: %s", mymacaddr)
 		}
 
 	} else {
 
 		DispatchTLV(encframe, strings.ToUpper(mymacaddr))
+		log.Printf("[PLANE][ETH] Dispatched P2P frame to: %s", mymacaddr)
 
 	}
 

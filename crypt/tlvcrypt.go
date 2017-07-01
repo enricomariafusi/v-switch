@@ -22,26 +22,22 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 	if err != nil {
 		log.Println("[CRYPT][AES][ENC] problem %s", err.Error())
 		return nil
-	} else {
-		log.Printf("[CRYPT][AES][ENC] Created NewCypher with blocksize %d", aes.BlockSize)
 	}
 
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
 	ciphertext := make([]byte, len(plaintext))
-	iv := make([]byte, aes.BlockSize)
-	if n, err := io.ReadFull(rand.Reader, iv); err != nil {
+	eiv := make([]byte, aes.BlockSize)
+	if _, err := io.ReadFull(rand.Reader, eiv); err != nil {
 		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
-	} else {
-		log.Printf("[CRYPT][AES][ENC] Created IV[%d]", n)
 	}
 
-	stream := cipher.NewCFBEncrypter(block, iv)
+	stream := cipher.NewCFBEncrypter(block, eiv)
 	stream.XORKeyStream(ciphertext, plaintext)
 
 	// return converted frame
-	return append(iv, ciphertext...)
+	return append(eiv, ciphertext...)
 }
 
 func FrameDecrypt(key []byte, cryptoText []byte) []byte {
@@ -59,10 +55,10 @@ func FrameDecrypt(key []byte, cryptoText []byte) []byte {
 		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
 	}
-	iv := ciphertext[:aes.BlockSize]
+	div := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
 
-	stream := cipher.NewCFBDecrypter(block, iv)
+	stream := cipher.NewCFBDecrypter(block, div)
 
 	// XORKeyStream can work in-place if the two arguments are the same.
 	stream.XORKeyStream(ciphertext, ciphertext)
