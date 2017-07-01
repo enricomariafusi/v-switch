@@ -98,7 +98,7 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 	mybuffer.Write(n_tlv)
 	err := decoder.Decode(&mytlv)
 	if err != nil {
-		log.Println("[TOOLS][UTILS][TLV] Error recoding TLV:", err.Error())
+		log.Println("[TOOLS][UTILS][TLV] Error decoding TLV:", err.Error())
 		return "", 0, nil
 
 	}

@@ -39,9 +39,9 @@ func SetIpAddress() {
 
 	err := ifcnfg.Run()
 	if err != nil {
-		log.Printf("[TAP][IP] Error executing  %s: %s", strings.Join(ifcnfg.Args, " "), err.Error())
+		log.Printf("[TAP][IP] Error executing  <%s>: %s", strings.Join(ifcnfg.Args, " "), err.Error())
 	} else {
-		log.Printf("[TAP][IP] Executed   %s", strings.Join(ifcnfg.Args, " "))
+		log.Printf("[TAP][IP] Executed   <%s>", strings.Join(ifcnfg.Args, " "))
 	}
 
 }
