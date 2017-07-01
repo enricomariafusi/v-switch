@@ -85,7 +85,12 @@ func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
 	tlv := bytes.Split(n_tlv, []byte("|"))
 
-	tlvBin, _ := base64.StdEncoding.DecodeString(string(tlv[1]))
+	tlvBin, err := base64.StdEncoding.DecodeString(string(tlv[1]))
+
+	if err != nil {
+		log.Println("[TOOLS][TLV][UNPACK] Error with base64:", err.Error())
+		return "Z", 0, nil
+	}
 
 	return string(tlv[0]), len(tlvBin), tlvBin
 
