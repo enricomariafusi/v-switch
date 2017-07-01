@@ -69,16 +69,31 @@ func interpreter(mytlvenc NetMessage) {
 
 	case "Q":
 		sourcemac := string(payload)
-		if len(VSwitch.SPlane) > 0 {
-			for alienmac := range VSwitch.SPlane {
 
-				AnnounceAlien(alienmac, sourcemac)
-			}
-			log.Println("[PLANE][TLV][INTERPRETER] PROCESSED valid payload, type [", typ, "]")
-		}
+		answerquery(sourcemac)
 
 	default:
 		log.Println("[PLANE][TLV][INTERPRETER] Unknown type, discarded: [ ", typ, " ]")
+
+	}
+
+}
+
+func answerquery(mac string) {
+
+	if _, err := net.ParseMAC(mac); err != nil {
+		log.Printf("[PLANE][TLV][QUERY] Invalid mac %s : %s", mac, err.Error())
+		return
+	}
+
+	if len(VSwitch.SPlane) > 0 {
+		for alienmac := range VSwitch.SPlane {
+
+			AnnounceAlien(alienmac, mac)
+		}
+		log.Println("[PLANE][TLV][QUERY] Query answered with success")
+	} else {
+		log.Println("[PLANE][TLV][QUERY] PLANE EMPTY, NO ANSWER TO QUERY")
 
 	}
 
