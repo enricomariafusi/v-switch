@@ -1,8 +1,7 @@
 package tools
 
 import (
-	"bytes"
-	"encoding/base64"
+	"encoding/json"
 	"log"
 	"math/rand"
 	"net"
@@ -10,6 +9,11 @@ import (
 	"strings"
 	"time"
 )
+
+type TlvJ struct {
+	T string
+	P []byte
+}
 
 var letters = []rune("0123456789-+@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -70,44 +74,35 @@ func AddrResolve(fqdn string) (addr string) {
 
 func CreateTLV(typ string, payload []byte) []byte {
 
-	if len(payload) == 0 {
+	var MyTlv TlvJ
+
+	MyTlv.T = typ
+	MyTlv.P = payload
+
+	b, err := json.Marshal(MyTlv)
+	if err != nil {
+		log.Println("[TOOLS][TLV][CREATE] TLV creation failed: ", err.Error())
 		return nil
 	}
 
-	var ret bytes.Buffer
+	log.Println("[TOOLS][TLV][CREATE] Frame created: ", string(b))
 
-	ret.WriteString(typ)
-	ret.WriteString(":")
-	ret.WriteString(base64.StdEncoding.EncodeToString(payload))
-
-	log.Println("[TOOLS][TLV][CREATE] Frame created: ", ret.String())
-
-	return ret.Bytes()
+	return b
 
 }
 
 func UnPackTLV(n_tlv []byte) (typ string, ln int, payload []byte) {
 
-	if n_tlv[1] != ':' {
-		log.Println("[TOOLS][TLV][UNPACK] WTF is this frame: ", string(n_tlv))
-		return "Z", 0, nil
-	}
+	var MyTlv TlvJ
 
-	if strings.Contains("AQFD", string(n_tlv[0])) == false {
-		log.Println("[TOOLS][TLV][UNPACK] WTF is this Type: ", string(n_tlv[0]))
-		return "Z", 0, nil
-	}
-
-	// n_tlv[0] contains the typ , tlv[2:] contains the payload
-
-	tlvBin, err := base64.StdEncoding.DecodeString(string(n_tlv[2:]))
-
+	err := json.Unmarshal(n_tlv, &MyTlv)
 	if err != nil {
-		log.Println("[TOOLS][TLV][UNPACK] Error with base64:", err.Error())
+		log.Println("[TOOLS][TLV][UNPACK] TLV Unpack failed: ", err.Error())
+		log.Println("[TOOLS][TLV][UNPACK] TLV Offending: ", string(n_tlv))
 		return "Z", 0, nil
 	}
 
-	return string(n_tlv[0]), len(tlvBin), tlvBin
+	return MyTlv.T, len(MyTlv.P), MyTlv.P
 
 }
 

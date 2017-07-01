@@ -51,25 +51,14 @@ func SeedingTask(remote string) {
 
 	log.Println("[PLANE][PLUG][ANNOUNCE] Our address is :", VSwitch.HAddr)
 
-	tmpAnnounce := VSwitch.HAddr + "|" + VSwitch.IPAdd
-	// create a fake announceTLV
-	tmpTlv := tools.CreateTLV("A", []byte(tmpAnnounce))
-	encTlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmpTlv)
-
-	log.Printf("[PLANE][PLUG][ANNOUNCE] Sending announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmpAnnounce)
-	DispatchUDP(encTlv, remote)
-
-	tmpTlv = tools.CreateTLV("Q", []byte(VSwitch.HAddr))
-	encTlv = crypt.FrameEncrypt([]byte(VSwitch.SwID), tmpTlv)
-	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
-	DispatchUDP(encTlv, remote)
-
 	ticker := time.NewTicker(time.Duration(cycle) * time.Second)
 
 	for _ = range ticker.C {
 
 		if len(VSwitch.SPlane) == 0 {
 			log.Printf("[PLANE][PLUG][ALIGN] Plane is empty, nothing to announce")
+			go peerInform(remote)
+
 			continue
 		}
 
@@ -85,5 +74,20 @@ func SeedingTask(remote string) {
 		}
 
 	}
+
+}
+
+func peerInform(remote string) {
+
+	tmpAnnounce := VSwitch.HAddr + "|" + VSwitch.IPAdd
+	tmpTlv := tools.CreateTLV("A", []byte(tmpAnnounce))
+	encTlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), tmpTlv)
+	log.Printf("[PLANE][PLUG][ANNOUNCE] Sending announce of %s to %s: [%s]", VSwitch.HAddr, remote, tmpAnnounce)
+	DispatchUDP(encTlv, remote)
+
+	qtmpTlv := tools.CreateTLV("Q", []byte(VSwitch.HAddr))
+	qencTlv := crypt.FrameEncrypt([]byte(VSwitch.SwID), qtmpTlv)
+	log.Printf("[PLANE][PLUG][ANNOUNCE] Query %s for addresses: done", remote)
+	DispatchUDP(qencTlv, remote)
 
 }
