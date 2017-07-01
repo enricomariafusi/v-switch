@@ -14,9 +14,7 @@ func init() {
 
 }
 
-func FrameEncrypt(key []byte, text []byte) []byte {
-
-	plaintext := text
+func FrameEncrypt(key []byte, plaintext []byte) []byte {
 
 	eblock, err := aes.NewCipher(key)
 	if err != nil {
@@ -29,7 +27,7 @@ func FrameEncrypt(key []byte, text []byte) []byte {
 	eciphertext := make([]byte, len(plaintext))
 	eiv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, eiv); err != nil {
-		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
+		log.Println("[CRYPT][AES][IV] Problem %s", err.Error())
 		return nil
 	}
 

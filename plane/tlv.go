@@ -35,7 +35,7 @@ func interpreter(mytlvenc NetMessage) {
 		log.Printf("[PLANE][TLV][ERROR] Invalid KEY(%d): %s", len(VSwitch.SwID), VSwitch.SwID)
 		return
 	} else {
-		log.Printf("[PLANE][TLV][INTERPRETER] Decrypted GOB %d BYTES long", len(my_tlv))
+		log.Printf("[PLANE][TLV][INTERPRETER] Decrypted JSON %d BYTES long", len(my_tlv))
 	}
 
 	typ, ln, payload := tools.UnPackTLV(my_tlv)
