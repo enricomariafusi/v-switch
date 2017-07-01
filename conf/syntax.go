@@ -38,7 +38,7 @@ func confCheck() {
 
 	// now some checks for syntax
 
-	Mtu, MtuErr := strconv.Atoi(GetConfigItem("MTU"))
+	_, MtuErr := strconv.Atoi(GetConfigItem("MTU"))
 
 	if MtuErr != nil {
 		log.Println("[CONF][SYNTAX] Unacceptable value of MTU ", GetConfigItem("MTU"))
@@ -90,11 +90,11 @@ func confCheck() {
 
 	}
 
-	if len(GetConfigItem("SWITCHID")) < Mtu {
+	if len(GetConfigItem("SWITCHID")) != 32 {
 		log.Println("[CONF][SYNTAX] Unacceptable value of SWITCHID", GetConfigItem("SWITCHID"))
-		log.Println("[CONF][SYNTAX] It MUST be at least the same lenght of MTU: generating one for you")
+		log.Println("[CONF][SYNTAX] It MUST be the appropriate size: generating one for you")
 
-		SetConfigItem("SWITCHID", tools.RandSeq(Mtu))
+		SetConfigItem("SWITCHID", tools.RandSeq(32))
 		fmt.Println("SWITCHID = ", GetConfigItem("SWITCHID"))
 		os.Exit(1)
 	}

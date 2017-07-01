@@ -1,71 +1,153 @@
 package crypt
 
 import (
-	"V-switch/conf"
-	"V-switch/tools"
-	"log"
-	"reflect"
-	"strconv"
-
-	"crypto"
-
-	"golang.org/x/crypto/openpgp/packet"
+	"crypto/aes"
+	"math/rand"
+	"time"
 )
 
-// GpGconfig is a needed container for GPG parameters to be used
-var GpGconfig packet.Config
+const (
+	// AES128 is AES-128 bit encryption
+	AES128 = 16
+	// AES192 is AES-192 bit encryption
+	AES192 = 24
+	// AES256 is AES-256 bit encryption
+	AES256 = 32
+)
 
-func init() {
+// AESy struct for encryption
+type AESy struct {
+	AESKey     string
+	Ciphertext []byte
+	Plaintext  []byte
+}
 
-	log.Printf("[CRYPT][PGP] Engine INIT")
+// NewAESy constructor for AESy
+func NewAESy(key string) *AESy {
+	aesy := new(AESy)
+	aesy.AESKey = key
 
-	GpGconfig.DefaultHash = crypto.SHA256
+	return aesy
+}
 
-	log.Printf("[CRYPT][PGP] Configured ENGINE: hash is SHA256")
+// Encrypt encrypts the string
+func (aesy *AESy) Encrypt(plaintext string) error {
+	aesy.Plaintext = []byte(plaintext)
 
-	GpGconfig.DefaultCipher = packet.CipherAES256
-	log.Printf("[CRYPT][PGP] Configured ENGINE: Crypto is AES256")
+	bc, err := aes.NewCipher([]byte(aesy.AESKey))
 
-	GpGconfig.DefaultCompressionAlgo = packet.CompressionZLIB
-	log.Printf("[CRYPT][PGP] Configured ENGINE: Compression is GZIP")
-
-	GpGconfig.CompressionConfig = &packet.CompressionConfig{
-		Level: 9,
+	if err != nil {
+		return err
 	}
 
-	log.Printf("[CRYPT][PGP] Configured ENGINE: Gzip Compress level 9")
+	var src = []byte(plaintext)
 
-	// Now testing the engine.
+	var ciphertext []byte
 
-	for i := 0; i < 10; i++ {
+	// If the plaintext is greater than the blocksize
+	if len(src) > bc.BlockSize() {
+		srca := SplitBytesN(src, bc.BlockSize())
 
-		l, _ := strconv.Atoi(conf.GetConfigItem("MTU"))
+		for i := range srca {
+			dst := make([]byte, bc.BlockSize())
 
-		originalText := []byte(tools.RandSeq(l + i - 5))
-		key := []byte(conf.GetConfigItem("SWITCHID")) //at least as long as the MTU
+			// No need to pad
+			if len(srca[i]) == bc.BlockSize() {
+				bc.Encrypt(dst, srca[i])
 
-		if len(key) < l {
-			log.Printf("[CRYPT][GPG] Wrong key lenght (%d) ", len(key))
-			log.Println("[CRYPT][GPG] AES256 cannot be shorter than MTU. Generating a random one")
-			log.Println("[CRYPT][GPG] PLEASE NOTICE THE SWITCH WILL BE ISOLATED")
-			key = []byte(tools.RandSeq(l)) // key must be as long as the payload
-			conf.SetConfigItem("SWITCHID", string(key[:]))
-			log.Printf("[CRYPT][GPG] Your EXAMPLE safe key is: %s", key)
+				ciphertext = append(ciphertext, dst...)
+				// Need to pad
+			} else {
+				padSize := bc.BlockSize() - len(srca[i])
+				padding := pad(padSize)
+
+				newsrc := append(srca[i], padding...)
+
+				bc.Encrypt(dst, newsrc)
+
+				ciphertext = append(ciphertext, dst...)
+			}
 		}
+		// If the plaintext is less than the blocksize
+	} else {
+		dst := make([]byte, bc.BlockSize())
+		padSize := bc.BlockSize() - len(src)
+		padding := pad(padSize)
 
-		encrypted := FrameEncrypt(key, originalText)
-		inverted := FrameDecrypt(key, encrypted)
+		src = append(src, padding...)
 
-		log.Println("[CRYPT][GPG] Originaltext Len: ", len(originalText))
-		log.Println("[CRYPT][GPG] EncryptedText Len: ", len(encrypted))
-		log.Println("[CRYPT][GPG] DEcryptedText Len: ", len(inverted))
-		if reflect.DeepEqual(inverted, originalText) {
-			log.Printf("[CRYPT][GPG] AES engine test %d PASSED", i+1)
-		} else {
-			log.Printf("[CRYPT][GPG] AES engine test %d FAILED", i+1)
+		bc.Encrypt(dst, src)
 
-		}
-
+		ciphertext = dst
 	}
 
+	aesy.Ciphertext = ciphertext
+
+	return nil
+}
+
+// Decrypt decrypts the ciphertext
+func (aesy *AESy) Decrypt(ciphertext string) error {
+	aesy.Ciphertext = []byte(ciphertext)
+
+	bc, err := aes.NewCipher([]byte(aesy.AESKey))
+
+	if err != nil {
+		return err
+	}
+
+	var src = []byte(ciphertext)
+
+	var plaintext []byte
+
+	srca := SplitBytesN(src, bc.BlockSize())
+
+	for i := range srca {
+		dst := make([]byte, bc.BlockSize())
+
+		bc.Decrypt(dst, srca[i])
+
+		plaintext = append(plaintext, dst...)
+	}
+
+	aesy.Plaintext = plaintext
+
+	return nil
+}
+
+// KeyGen generates a key of given size (note that certain characters are omitted to make it easier to read)
+func KeyGen(size int) []byte {
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+	result := make([]byte, size)
+
+	for i := 0; i < size; i++ {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+
+	return result
+}
+
+// SplitBytesN chunks ciphertext into the proper blocksize for decryption
+func SplitBytesN(src []byte, size int) [][]byte {
+	var newb [][]byte
+
+	for i := 0; i < len(src); i += size {
+		newb = append(newb, src[i:i+size])
+	}
+
+	return newb
+}
+
+// pad generates padding to keep the cipher block the proper size
+func pad(size int) []byte {
+	result := make([]byte, size)
+
+	for i := 0; i < size; i++ {
+		result[i] = 0x00
+	}
+
+	return result
 }
