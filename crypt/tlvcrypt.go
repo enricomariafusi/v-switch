@@ -1,44 +1,71 @@
 package crypt
 
 import (
-	"V-switch/tools"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"io"
 	"log"
 )
 
 func init() {
 
-	log.Printf("[CRYPT][PGP] Engine INIT")
+	log.Printf("[CRYPT][AES] Engine INIT")
 
 }
 
-// FrameEncrypt returns an encrypted frame, given the frame and the key
-func FrameEncrypt(key []byte, text2encrypt []byte) []byte {
+func FrameEncrypt(key []byte, text []byte) []byte {
 
-	ace1 := NewAESy(string(key))
+	plaintext := text
 
-	err := ace1.Encrypt(string(text2encrypt))
-
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Printf("[AES256][ENCRYPT] Cannot encrypt frame: %s", err.Error())
+		log.Println("[CRYPT][AES][ENC] problem %s", err.Error())
 		return nil
+	} else {
+		log.Printf("[CRYPT][AES][ENC] Created NewCypher with blocksize %d", aes.BlockSize)
 	}
 
-	return ace1.Ciphertext
+	// The IV needs to be unique, but not secure. Therefore it's common to
+	// include it at the beginning of the ciphertext.
+	ciphertext := make([]byte, len(plaintext))
+	iv := make([]byte, aes.BlockSize)
+	if n, err := io.ReadFull(rand.Reader, iv); err != nil {
+		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
+		return nil
+	} else {
+		log.Printf("[CRYPT][AES][ENC] Created IV[%d]", n)
+	}
 
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext, plaintext)
+
+	// return converted frame
+	return append(iv, ciphertext...)
 }
 
-// FrameDecrypt returns the UNencrypted frame, given the encrypted frame and the key
-func FrameDecrypt(key []byte, text2decrypt []byte) []byte {
+func FrameDecrypt(key []byte, cryptoText []byte) []byte {
+	ciphertext := cryptoText
 
-	ace1 := NewAESy(string(key))
-
-	err := ace1.Decrypt(string(text2decrypt))
-
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		log.Printf("[AES256][DECRYPT] Cannot decrypt frame: %s", err.Error())
+		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
 	}
 
-	return tools.CleanFrame(ace1.Plaintext)
+	// The IV needs to be unique, but not secure. Therefore it's common to
+	// include it at the beginning of the ciphertext.
+	if len(ciphertext) < aes.BlockSize {
+		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
+		return nil
+	}
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
 
+	stream := cipher.NewCFBDecrypter(block, iv)
+
+	// XORKeyStream can work in-place if the two arguments are the same.
+	stream.XORKeyStream(ciphertext, ciphertext)
+
+	return ciphertext
 }
