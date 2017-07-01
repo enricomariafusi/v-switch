@@ -16,7 +16,7 @@ import (
 func init() {
 
 	if (os.Getuid() != 0) && (os.Getgid() != 0) {
-		fmt.Println("[MAIN] YOU MUST BE ROOT TO RUN THIS PROGRAM , BECAUSE ONLY ROOT IS ALLOWED TO CREATE TAP DEVICES")
+		fmt.Println("[MAIN] YOU MUST BE ROOT TO RUN THIS PROGRAM")
 		os.Exit(1)
 	}
 

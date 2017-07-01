@@ -16,51 +16,50 @@ func init() {
 
 func FrameEncrypt(key []byte, plaintext []byte) []byte {
 
-	eblock, err := aes.NewCipher(key)
+	c, err := aes.NewCipher(key)
 	if err != nil {
-		log.Println("[CRYPT][AES][ENC] problem %s", err.Error())
+		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
 	}
 
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
-	eciphertext := make([]byte, len(plaintext))
-	eiv := make([]byte, aes.BlockSize)
-	if _, err := io.ReadFull(rand.Reader, eiv); err != nil {
-		log.Println("[CRYPT][AES][IV] Problem %s", err.Error())
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
 		return nil
 	}
 
-	stream := cipher.NewCFBEncrypter(eblock, eiv)
-	stream.XORKeyStream(eciphertext, plaintext)
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		log.Println("[CRYPT][AES][NONCE] Problem %s", err.Error())
+		return nil
+	}
 
-	// return converted frame
-	return append(eiv, eciphertext...)
+	return gcm.Seal(nonce, nonce, plaintext, nil)
+
 }
 
-func FrameDecrypt(key []byte, cryptoText []byte) []byte {
+func FrameDecrypt(key []byte, ciphertext []byte) []byte {
 
-	dblock, err := aes.NewCipher(key)
+	c, err := aes.NewCipher(key)
 	if err != nil {
-		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
+		log.Println("[DECRYPT][AES] Problem %s", err.Error())
 		return nil
 	}
 
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
-	if len(cryptoText) < aes.BlockSize {
-		log.Println("[CRYPT][AES][ENC] Problem %s", err.Error())
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		log.Println("[DECRYPT][AES] Problem %s", err.Error())
 		return nil
 	}
-	div := cryptoText[:aes.BlockSize]
-	dciphertext := cryptoText[aes.BlockSize:]
 
-	stream := cipher.NewCFBDecrypter(dblock, div)
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		log.Println("[DECRYPT][AES] Problem %s", "Cyphertext too short")
+		return nil
+	}
 
-	dresult := make([]byte, len(dciphertext))
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+	cleartext, _ := gcm.Open(nil, nonce, ciphertext, nil)
+	return cleartext
 
-	// XORKeyStream can work in-place if the two arguments are the same.
-	stream.XORKeyStream(dresult, dciphertext)
-
-	return dresult
 }

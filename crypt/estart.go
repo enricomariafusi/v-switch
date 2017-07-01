@@ -3,6 +3,8 @@ package crypt
 import (
 	"V-switch/conf"
 	"V-switch/tools"
+	"crypto/rand"
+	"io"
 	"log"
 	"reflect"
 )
@@ -20,7 +22,12 @@ func init() {
 
 		l := 32
 
-		originalText := []byte(tools.RandSeq(50 * i))
+		originalText := make([]byte, 50*(i+1))
+		if _, err := io.ReadFull(rand.Reader, originalText); err != nil {
+			log.Println("[CRYPT][RAND][TEST] Problem %s", err.Error())
+			return
+		}
+
 		key := []byte(conf.GetConfigItem("SWITCHID")) //at least as long as the MTU
 
 		if len(key) != l {
@@ -40,6 +47,7 @@ func init() {
 
 		} else {
 			failed++
+			log.Printf("[CRYPT][AES256][FAIL] Test #%d failed to encrypt %q to %q ", i, inverted, originalText)
 
 		}
 

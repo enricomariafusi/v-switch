@@ -40,6 +40,11 @@ func TapInterpreterThread() {
 
 func processFrame(myframe []byte) {
 
+	if len(VSwitch.SPlane) == 0 {
+		log.Printf("[PLANE][ETH] No way to dispatch anything: plane is empty.Skipping.")
+		return
+	}
+
 	log.Printf("[PLANE][ETH] Read %d Bytes frame from QUEUE TapToPlane", len(myframe))
 	mymacaddr := tools.MACDestination(myframe).String()
 	mymacaddr = strings.ToUpper(mymacaddr)
