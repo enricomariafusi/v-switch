@@ -7,28 +7,23 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
-
-	"time"
 )
 
 func PcapReaderLoop() {
 
 	var (
-		device      string = VDev.devicename
-		snapshotLen int32  = int32(VDev.mtu)
-		promiscuous bool   = false
+		snapshotLen int32 = int32(VDev.mtu * 2)
 		err         error
-		timeout     time.Duration = 10 * time.Microsecond
 		handle      *pcap.Handle
 	)
 
 	// Open device
-	handle, err = pcap.OpenLive(device, snapshotLen, promiscuous, timeout)
+	handle, err = pcap.OpenLive(VDev.devicename, snapshotLen, false, pcap.BlockForever)
 	if err != nil {
-		log.Printf("[TAP][PCAP] Cannot sniff the device  :%s(%d)", device, snapshotLen)
+		log.Printf("[TAP][PCAP] Cannot sniff the device  :%s(%d)", VDev.devicename, snapshotLen)
 
 	} else {
-		log.Printf("[TAP][PCAP] Start sniffing device <%s> with MTU %d ", device, snapshotLen)
+		log.Printf("[TAP][PCAP] Start sniffing device <%s> with Snapshot Length %d bytes ", VDev.devicename, snapshotLen)
 	}
 	defer handle.Close()
 
