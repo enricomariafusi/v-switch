@@ -37,7 +37,7 @@ func (vd *Vswitchdevice) SetDeviceConf() {
 
 	vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU"))
 
-	vd.frame = make([]byte, vd.mtu)
+	vd.frame = make([]byte, vd.mtu+22) // considering the header AND the VLAN tagging (if existing) = 22 bytes more
 
 	log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
 
