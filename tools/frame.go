@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"bytes"
 	"net"
 	"strings"
 )
@@ -53,9 +54,12 @@ func IsIPMulticast(addr net.HardwareAddr) bool {
 }
 
 func CleanFrame(frame []byte) []byte {
-	s := string(frame)
-	s = strings.TrimRight(s, "\x00")
-	return []byte(s)
+
+	splitter := func(c rune) bool {
+		return (c == 0) //
+	}
+
+	return bytes.TrimRightFunc(frame, splitter)
 
 }
 

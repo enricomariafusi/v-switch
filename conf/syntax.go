@@ -38,9 +38,14 @@ func confCheck() {
 
 	// now some checks for syntax
 
-	_, MtuErr := strconv.Atoi(GetConfigItem("MTU"))
+	Mtu, MtuErr := strconv.Atoi(GetConfigItem("MTU"))
 
 	if MtuErr != nil {
+		log.Println("[CONF][SYNTAX] Unacceptable value of MTU ", GetConfigItem("MTU"))
+		os.Exit(1)
+	}
+
+	if Mtu < 68 {
 		log.Println("[CONF][SYNTAX] Unacceptable value of MTU ", GetConfigItem("MTU"))
 		os.Exit(1)
 	}

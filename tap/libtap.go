@@ -35,15 +35,11 @@ func init() {
 //SetDeviceConf pupulates the switch with configuration taken from the config file.
 func (vd *Vswitchdevice) SetDeviceConf() {
 
-	if vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU")); vd.err != nil {
-		log.Printf("[TAP] Cannot get MTU from conf: <%s>", vd.err)
-		vd.mtu = 1500
-		vd.frame = make([]byte, vd.mtu+28)
-		log.Printf("[TAP] Using the default of 1500. Hope is fine.")
-	} else {
-		vd.frame = make([]byte, vd.mtu+28)
-		log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
-	}
+	vd.mtu, vd.err = strconv.Atoi(conf.GetConfigItem("MTU"))
+
+	vd.frame = make([]byte, vd.mtu)
+
+	log.Printf("[TAP] MTU SET TO: %v", vd.mtu)
 
 	vd.devicename = conf.GetConfigItem("DEVICENAME")
 	log.Printf("[TAP] Devicename in conf is: %v", vd.devicename)
@@ -121,9 +117,9 @@ func (vd *Vswitchdevice) ReadFrame() {
 
 	} else {
 
-		//cleanframe := tools.CleanFrame(vd.frame)
-		log.Printf("[TAP][READ] I/O Size: %d , Raw size %d", n, len(vd.frame))
-		plane.TapToPlane <- vd.frame
+		cleanframe := tools.CleanFrame(vd.frame)
+		log.Printf("[TAP][READ] I/O Size: %d , Raw size %d  Clean size", n, len(vd.frame), len(cleanframe))
+		plane.TapToPlane <- cleanframe
 		log.Printf("[TAP][READ] Frame sent to Plane")
 
 	}
