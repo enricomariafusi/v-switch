@@ -51,7 +51,13 @@ func interpreter(mytlvenc NetMessage) {
 
 	// it is a frame
 	case "F":
-		PlaneToTap <- payload
+
+		if mytlvenc.Addr != VSwitch.Fqdn {
+			PlaneToTap <- payload
+		} else {
+			log.Println("[TLV][INTERPRETER] Loop detected, discarding packet from ", mytlvenc.Addr)
+		}
+
 		// someone is announging itself
 	case "A":
 		announce := string(payload)
