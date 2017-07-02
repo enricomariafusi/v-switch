@@ -118,7 +118,7 @@ func (vd *Vswitchdevice) ReadFrame() {
 	} else {
 
 		cleanframe := tools.CleanFrame(vd.frame)
-		log.Printf("[TAP][READ] I/O Size: %d , Raw size %d  Clean size", n, len(vd.frame), len(cleanframe))
+		log.Printf("[TAP][READ] I/O Size: %d , Raw size %d  Clean size %d", n, len(vd.frame), len(cleanframe))
 		plane.TapToPlane <- cleanframe
 		log.Printf("[TAP][READ] Frame sent to Plane")
 
