@@ -82,11 +82,7 @@ func (vd *Vswitchdevice) ReadFrameThread() {
 		}
 	}()
 
-	for {
-
-		vd.ReadFrame()
-
-	}
+	PcapReaderLoop()
 
 }
 
@@ -102,27 +98,6 @@ func (vd *Vswitchdevice) GetTapMac() string {
 
 	log.Printf("[TAP] GetTapMac: mac address is empty, using default one")
 	return "00:00:00:00:00:00"
-
-}
-
-// ReadFrame reads a frame from the TAP, and puts it into the channel to plane
-func (vd *Vswitchdevice) ReadFrame() {
-
-	var n int
-
-	n, vd.err = vd.Realif.Read(vd.frame)
-
-	if vd.err != nil {
-		log.Printf("[TAP] Error reading tap: <%s>", vd.err)
-
-	} else {
-
-		cleanframe := tools.CleanFrame(vd.frame)
-		log.Printf("[TAP][READ] I/O Size: %d , Raw size %d  Clean size %d", n, len(vd.frame), len(cleanframe))
-		plane.TapToPlane <- cleanframe
-		log.Printf("[TAP][READ] Frame sent to Plane")
-
-	}
 
 }
 
